@@ -719,6 +719,14 @@
 
             <div class="share-actions" style="margin-top:30px;">
                 <button onclick="copyToClipboard()" class="wulf-primary-btn">COPY TO PACK</button>
+
+                <button onclick="generateShareQR()" class="wulf-btn"
+                    style="margin-top:10px; background:#333; border:1px solid #555;">GENERATE QR CODE</button>
+                <div style="margin-top:20px; text-align:center; min-height:20px;">
+                    <img id="qr-code-display" src="" style="max-width:150px; border-radius:10px; display:none;"
+                        onload="this.style.display='inline-block'">
+                </div>
+
                 <button
                     onclick="document.getElementById('summary-screen').style.display='none'; document.getElementById('leaderboard-screen').style.display='block';"
                     class="back-btn" style="margin-top:15px;">Back to Leaderboard</button>

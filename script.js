@@ -930,3 +930,11 @@ function copyToClipboard() {
         alert("Recap copied to clipboard! 📋");
     }
 }
+
+function generateShareQR() {
+    const currentUrl = window.location.href;
+    const qrContainer = document.getElementById('qr-code-display');
+    if (qrContainer) {
+        qrContainer.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`;
+    }
+}
