@@ -1,0 +1,182 @@
+:root {
+    --wolf-green: #4ade80;
+    --dark-bg: #121417;
+    --card-bg: #1c1f24;
+    --text-hover: #ffffff;
+    --text-gray: #9ca3af;
+    --font-main: 'Outfit', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-main);
+    background-color: var(--dark-bg);
+    color: white;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.container {
+    width: 100%;
+    max-width: 420px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Setup Screen */
+.logo {
+    font-size: 4rem;
+    font-weight: 800;
+    color: var(--wolf-green);
+    letter-spacing: 4px;
+    margin: 40px 0 20px 0;
+    text-shadow: 0 0 20px rgba(74, 222, 128, 0.4);
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 24px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    font-size: 0.9rem;
+    color: var(--text-gray);
+    font-weight: 600;
+}
+
+.hcp-input {
+    background: #25292e;
+    border: 1px solid #363b42;
+    border-radius: 12px;
+    color: white;
+    padding: 14px;
+    font-size: 1.1rem;
+    width: 100%;
+    outline: none;
+    font-family: inherit;
+}
+
+.hcp-input:focus {
+    border-color: var(--wolf-green);
+}
+
+.btn-main {
+    width: 100%;
+    background: var(--wolf-green);
+    color: #000;
+    border: none;
+    padding: 18px;
+    border-radius: 16px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 8px 16px rgba(74, 222, 128, 0.2);
+    text-transform: uppercase;
+    transition: transform 0.2s;
+}
+
+.btn-main:active {
+    transform: scale(0.98);
+}
+
+/* Game Screen */
+.header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 10px 0;
+}
+
+.btn-back {
+    background: none;
+    border: none;
+    color: var(--text-gray);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.hole-info,
+.wolf-info {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-gray);
+}
+
+.hole-info span,
+.wolf-info span {
+    color: var(--wolf-green);
+    font-size: 1.4rem;
+    margin-left: 5px;
+}
+
+.action-zone {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#partner-selection h3 {
+    text-align: center;
+    color: var(--text-gray);
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+}
+
+#partner-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.btn-partner {
+    background: var(--card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    color: white;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.btn-partner:active {
+    background: rgba(74, 222, 128, 0.15);
+    border-color: var(--wolf-green);
+}
+
+/* Utility to ensure elements are hidden */
+.hidden {
+    display: none;
+}

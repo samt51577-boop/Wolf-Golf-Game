@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WÜLF</title>
+    <style>
+        :root {
+            --neon-green: #7cfc00;
+            --bg-black: #121417;
+            --card-bg: #1e2126;
+            --input-bg: #16181d;
+            --text-gray: #a1a1a1;
+        }
+
+        body {
+            background-color: var(--bg-black);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        /* Setup Screen / Main Containers */
+        .wulf-container {
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .wulf-header {
+            text-align: center;
+        }
+
+        /* Logo Neon Effect */
+        .wulf-logo {
+            color: var(--neon-green);
+            font-size: 80px;
+            font-weight: 900;
+            letter-spacing: -2px;
+            text-align: center;
+            margin-bottom: 0;
+            margin-top: 0;
+            text-shadow: 0 0 20px rgba(124, 252, 0, 0.6);
+        }
+
+        .wulf-tagline {
+            text-align: center;
+            color: var(--text-gray);
+            letter-spacing: 4px;
+            font-size: 14px;
+            margin-top: 10px;
+            margin-bottom: 40px;
+            font-weight: bold;
+        }
+
+        /* Main Container Card */
+        .setup-card,
+        .game-view {
+            background-color: var(--card-bg);
+            border-radius: 40px;
+            padding: 40px 30px;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-view {
+            display: none;
+            /* Matches setup card style */
+        }
+
+        .input-section {
+            margin-bottom: 25px;
+        }
+
+        .input-section label,
+        .player-label {
+            display: block;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .icon {
+            margin-right: 8px;
+            font-style: normal;
+        }
+
+        .player-label {
+            color: #fff;
+            margin-top: 25px;
+        }
+
+        /* Input Styling */
+        .name-input,
+        select {
+            background-color: var(--input-bg);
+            border: 1px solid #2d3138;
+            color: white;
+            padding: 18px;
+            border-radius: 15px;
+            font-size: 16px;
+            width: 100%;
+            outline: none;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        .name-input:focus,
+        select:focus {
+            border-color: var(--neon-green);
+        }
+
+        .player-inputs {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        /* Handicap Box Neon Style */
+        .hcp-input {
+            min-width: 90px;
+            height: 58px;
+            border: 1px solid #2d3138;
+            background-color: var(--input-bg);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-gray);
+            font-weight: bold;
+            cursor: text;
+        }
+
+        .active-hcp {
+            border: 2px solid var(--neon-green);
+            color: white;
+            box-shadow: 0 0 15px rgba(124, 252, 0, 0.2);
+        }
+
+        /* Custom Select Arrow */
+        .select-wrapper {
+            position: relative;
+        }
+
+        /* We can't use ::after on wrapper easily to overlay select native arrow cross-browser without more reset, 
+           but we can try a simple layout or just trust the browser default for now to keep it clean. 
+           The user snippet had specific positioning. */
+        .select-wrapper::after {
+            content: '▼';
+            font-size: 10px;
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-gray);
+            pointer-events: none;
+        }
+
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+        /* Buttons */
+        .wulf-primary-btn {
+            width: 100%;
+            padding: 20px;
+            background-color: var(--neon-green);
+            color: black;
+            font-weight: 900;
+            font-size: 18px;
+            letter-spacing: 2px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(124, 252, 0, 0.4);
+            transition: transform 0.1s ease, box-shadow 0.2s ease;
+            margin-top: 30px;
+        }
+
+        .wulf-primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(124, 252, 0, 0.6);
+        }
+
+        .wulf-primary-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 0 10px rgba(124, 252, 0, 0.2);
+        }
+
+        /* Wager Specific Styles */
+        .multiplier-box {
+            background: var(--input-bg);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #2d3138;
+        }
+
+        .multiplier-box .label {
+            display: block;
+            font-size: 10px;
+            color: var(--text-gray);
+            text-transform: uppercase;
+        }
+
+        .multiplier-box .val {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--neon-green);
+        }
+
+        .flex-row {
+            display: flex;
+            align-items: center;
+        }
+
+        .text-xs {
+            font-size: 0.75rem;
+        }
+
+        .text-slate-500 {
+            color: #64748b;
+        }
+
+        .italic {
+            font-style: italic;
+        }
+
+        .mt-2 {
+            margin-top: 0.5rem;
+        }
+
+        /* Game View Specifics - adapting old classes to new theme */
+        .button-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .partner-btn,
+        .wulf-blue-btn {
+            width: 100%;
+            padding: 18px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            font-weight: 900;
+            cursor: pointer;
+            border-radius: 15px;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .partner-btn:hover,
+        .wulf-blue-btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .wulf-dot {
+            color: var(--neon-green);
+            margin-left: 8px;
+            font-size: 1.2rem;
+            vertical-align: middle;
+        }
+
+        .lone-wolf-btn {
+            width: 100%;
+            padding: 18px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            font-weight: 900;
+            cursor: pointer;
+            border-radius: 15px;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .lone-wolf-btn:hover {
+            background: #dc2626;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .blind-wolf-btn {
+            width: 100%;
+            padding: 18px;
+            background: rgba(124, 58, 237, 0.1);
+            color: #a855f7;
+            border: 2px dashed #a855f7;
+            font-weight: 900;
+            cursor: pointer;
+            border-radius: 15px;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .blind-wolf-btn:hover {
+            background: rgba(124, 58, 237, 0.2);
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+        }
+
+        .win-btn {
+            width: 100%;
+            padding: 18px;
+            height: 80px;
+            font-size: 1.4rem;
+            font-weight: 900;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: transform 0.1s;
+        }
+
+        .win-btn:active {
+            transform: scale(0.98);
+        }
+
+        .wolf-side {
+            background: var(--neon-green);
+            color: black;
+            box-shadow: 0 0 15px rgba(124, 252, 0, 0.3);
+        }
+
+        .pack-side {
+            background: #ef4444;
+            color: white;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 15px;
+            background: #2d3138;
+            color: #fff;
+            border: 1px solid #444;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        .reset-btn:hover {
+            background: #333;
+        }
+
+        .back-btn {
+            width: 100%;
+            padding: 15px;
+            background: transparent;
+            border: 1px solid #444;
+            color: #888;
+            font-size: 0.9rem;
+            font-weight: normal;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .undo-btn {
+            background: transparent;
+            color: var(--text-gray);
+            border: 1px solid #333;
+            width: auto;
+            padding: 8px 15px;
+            font-size: 0.8rem;
+            margin: 0;
+            border-radius: 10px;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        .undo-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h2,
+        h3,
+        h4 {
+            color: white;
+            margin-top: 0;
+        }
+
+        /* Net Score & Leaderboard */
+        .net-score-display {
+            background: var(--input-bg);
+            padding: 20px;
+            border-radius: 20px;
+            margin: 20px 0;
+            border-left: 4px solid var(--neon-green);
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 1rem;
+            color: #ccc;
+        }
+
+        .stroke-dot {
+            color: var(--neon-green);
+            vertical-align: middle;
+            margin-left: 5px;
+            font-size: 1.2rem;
+            line-height: 0;
+        }
+
+        .leaderboard-row {
+            background: var(--input-bg);
+            border-left: 4px solid #444;
+            color: white;
+            padding: 18px;
+            margin-bottom: 10px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .rank-1 {
+            border-left-color: #f59e0b;
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.1), transparent);
+        }
+
+        .rank-2 {
+            border-left-color: #94a3b8;
+        }
+
+        .rank-3 {
+            border-left-color: #b45309;
+        }
+
+        .player-score {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: var(--neon-green);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="setup-screen" class="wulf-container">
+        <header class="wulf-header">
+            <h1 class="wulf-logo">WÜLF</h1>
+            <p class="wulf-tagline">JOIN THE PACK. LEAD THE HUNT.</p>
+        </header>
+
+        <div class="setup-card">
+            <div class="input-section">
+                <label><i class="icon">👥</i> Group Size</label>
+                <div class="select-wrapper">
+                    <select id="group-size-select" onchange="updatePlayerRows()">
+                        <option value="5">5 Players</option>
+                        <option value="4">4 Players</option>
+                        <option value="3">3 Players</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-section">
+                <label><i class="icon">⛳</i> Course</label>
+                <div class="select-wrapper">
+                    <select>
+                        <option>Willow Creek</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="player-rows-container">
+                <!-- Dynamic Rows Injected Here via JS -->
+                <div class="player-entry-group">
+                    <label class="player-label">Player 1 (You)</label>
+                    <div class="player-inputs">
+                        <input type="text" class="name-input" placeholder="Name" value="Sam">
+                        <div class="hcp-input active-hcp" contenteditable="true"
+                            oninput="this.classList.toggle('active-hcp', this.innerText.trim() !== '' && this.innerText !== 'HCP')">
+                            10.2</div>
+                    </div>
+                </div>
+                <!-- Other rows generated by JS -->
+            </div>
+
+            <!-- New Wager Settings Dialogue -->
+            <div class="setup-card wager-dialogue" style="margin-top: 20px; border: 1px solid #333; padding: 25px;">
+                <h3
+                    style="color: var(--neon-green); font-size: 14px; letter-spacing: 2px; margin-bottom: 20px; margin-top:0;">
+                    💰 WAGER SETTINGS
+                </h3>
+
+                <div class="input-section">
+                    <label>Point Value ($)</label>
+                    <div class="flex-row">
+                        <input type="number" id="point-value" value="1.00" class="name-input" step="0.50">
+                    </div>
+                    <p class="text-xs italic text-slate-500 mt-2">Base value for a standard hole win.</p>
+                </div>
+
+                <div class="multiplier-grid"
+                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
+                    <div class="multiplier-box">
+                        <span class="label">Lone Wolf</span>
+                        <span class="val">4x</span>
+                    </div>
+                    <div class="multiplier-box">
+                        <span class="label">Blind Wolf</span>
+                        <span class="val">6x</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-container" style="margin-top: 30px; text-align: center;">
+                <button id="start-hunt-btn" onclick="validateAndStart()" class="wulf-primary-btn">
+                    START THE HUNT
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="wulf-container">
+        <!-- Step 3: Game View -->
+        <div id="selection-screen" class="game-view">
+            <!-- Hole Card -->
+            <div class="hole-status" style="margin-bottom: 20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2 style="color: white; font-size: 24px; margin: 0;">Hole <span id="selection-hole-num">1</span>
+                    </h2>
+                    <button class="undo-btn" onclick="undoLastHole()">↺ Undo</button>
+                </div>
+                <p style="color: var(--neon-green); font-weight:bold; letter-spacing:1px; margin-top:5px;">STROKE INDEX:
+                    <span id="selection-hole-si">-</span></p>
+            </div>
+
+            <div style="margin-bottom: 20px; text-align: left;">
+                <p style="margin:0; color:#fff; font-size:1.1rem;">Wolf: <strong id="display-wolf-name"
+                        style="color:var(--neon-green);"></strong></p>
+            </div>
+
+            <!-- Partner Buttons -->
+            <div class="action-prompt">
+                <div id="partner-buttons" class="button-grid" style="display:flex; flex-direction:column; gap:10px;">
+                </div>
+
+                <div style="margin: 20px 0 20px 0; border-top: 1px solid #333; padding-top: 20px;">
+                    <div style="display: flex; gap: 15px;">
+                        <button class="lone-wolf-btn" onclick="selectAlliance('lone')">🐺 LONE WOLF</button>
+                        <button class="blind-wolf-btn" onclick="selectBlindWolf()">🙈 BLIND WOLF</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Betting Tools -->
+            <div class="betting-tools" style="border-top: 1px solid #333; margin-top: 25px; padding-top: 20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:#a1a1a1;">Current Wager: $<span id="current-wager-display">1.00</span></span>
+                    <button class="press-btn" onclick="togglePress()"
+                        style="background:transparent; border:1px solid #ef4444; color:#ef4444; padding:8px 15px; border-radius:10px; cursor:pointer;">🔥
+                        PRESS HOLE</button>
+                </div>
+                <div class="upcoming-wolves" style="margin-top: 15px;">
+                    <span id="upcoming-wolves-display"
+                        style="font-size: 0.75rem; color: #64748b; text-transform: uppercase;">Next Up: -</span>
+                </div>
+            </div>
+
+            <div id="history-section" style="margin-top:40px; border-top:1px solid #333; padding-top:20px;">
+                <h5
+                    style="color:#666; text-transform:uppercase; letter-spacing:2px; font-size:0.8rem; margin-bottom:15px;">
+                    Round Log</h5>
+                <div id="history-list"></div>
+            </div>
+        </div>
+
+        <!-- Step 4: Scoring Screen -->
+        <div id="scoring-screen" class="game-view">
+            <div class="hole-header" style="text-align: center; margin-bottom: 25px;">
+                <h2 style="color: var(--neon-green); font-size: 32px; font-weight: 900; margin: 0;">
+                    HOLE <span id="scoring-hole-num">1</span>
+                </h2>
+                <p style="color: var(--text-gray); letter-spacing: 2px; font-size: 12px;">
+                    PAR <span id="hole-par">-</span> — STROKE INDEX <span id="hole-si">-</span>
+                </p>
+            </div>
+
+            <!-- Dynamic Player Rows -->
+            <div id="score-inputs-container">
+                <!-- Injected via JS -->
+            </div>
+
+            <div class="scoring-actions" style="margin-top:30px;">
+                <button class="win-btn wolf-side" onclick="resolveHole('wolf')">
+                    <span id="wolf-team-names">Wolf Team</span> Wins
+                </button>
+
+                <div style="text-align:center; color:#444; margin:15px 0; font-weight:bold; letter-spacing:1px;">VS
+                </div>
+
+                <button class="win-btn pack-side" onclick="resolveHole('pack')">
+                    The Pack Wins
+                </button>
+            </div>
+
+            <button class="back-btn" onclick="goBackToSelection()" style="margin-top:30px;">Change Alliance</button>
+        </div>
+
+        <!-- Step 5: Leaderboard -->
+        <div id="leaderboard-screen" class="game-view">
+            <div class="congratulations" style="text-align:center; margin-bottom:30px;">
+                <h2 style="color:var(--neon-green); font-size:2rem; margin-bottom:10px;">MATCH COMPLETE</h2>
+                <p style="color:var(--text-gray);">Final Standings</p>
+            </div>
+
+            <div id="leaderboard-list" style="margin: 20px 0;">
+            </div>
+
+            <div class="payout-calculator"
+                style="background:#16181d; padding:20px; border-radius:20px; border:1px solid #333;">
+                <label style="color:#fff; display:block; margin-bottom:10px; font-size:0.9rem;">SETTLEMENT
+                    RECAP</label>
+                <div style="margin-bottom:10px; color:#888; font-size:0.85rem;">Based on Setup Wager</div>
+
+                <div id="payout-instructions"
+                    style="margin-top:20px; font-size:0.9rem; max-height:200px; overflow-y:auto;">
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; display: flex; gap: 15px;">
+                <button class="back-btn" onclick="undoLastHole()" style="margin-top:0;">Undo Last</button>
+                <button class="reset-btn" onclick="clearMatch()">Start New Match</button>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button onclick="showRecapScreen()" class="wulf-primary-btn"
+                    style="background: transparent; border: 1px solid var(--neon-green); color: var(--neon-green);">
+                    VIEW RECAP CARD
+                </button>
+            </div>
+        </div>
+
+        <!-- NEW: Recap / Summary Screen -->
+        <div id="summary-screen" class="game-view" style="border: 1px solid var(--neon-green);">
+            <header class="wulf-header">
+                <h2 class="wulf-logo" style="font-size: 40px; margin-bottom:5px;">THE RECAP</h2>
+                <p class="wulf-tagline">FINAL SETTLEMENT</p>
+            </header>
+
+            <div id="summary-list" class="payout-container" style="margin-top:20px;">
+                <!-- Populated via JS -->
+            </div>
+
+            <div class="share-actions" style="margin-top:30px;">
+                <button onclick="copyToClipboard()" class="wulf-primary-btn">COPY TO PACK</button>
+                <button
+                    onclick="document.getElementById('summary-screen').style.display='none'; document.getElementById('leaderboard-screen').style.display='block';"
+                    class="back-btn" style="margin-top:15px;">Back to Leaderboard</button>
+            </div>
+        </div>
+    </div> <!-- End container -->
+
+    <script src="script.js"></script>
+</body>
+
+</html>
