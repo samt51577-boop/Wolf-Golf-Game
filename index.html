@@ -404,6 +404,26 @@
             margin-bottom: 20px;
         }
 
+        /* New Nav Icon Button */
+        .nav-icon-btn {
+            background: none;
+            border: 1px solid transparent;
+            color: #888;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .nav-icon-btn:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.05);
+            border-color: #555;
+        }
+
         h2,
         h3,
         h4 {
@@ -555,24 +575,20 @@
     <div class="wulf-container">
         <!-- Step 3: Game View -->
         <div id="selection-screen" class="game-view">
-            <!-- Hole Nav -->
-            <div class="hole-nav"
-                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <button onclick="goToMainPage()" class="menu-btn"
-                    style="background: none; border: 1px solid #444; color: #888; border-radius: 5px; padding: 5px 10px; font-size: 12px; cursor:pointer;">
-                    ☰ MENU
-                </button>
+            <!-- Wulf Nav -->
+            <div class="wulf-nav"
+                style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #333; margin-bottom: 20px;">
+                <button onclick="goToMainPage()" class="nav-icon-btn">☰ MENU</button>
 
-                <h2 style="color: white; font-size: 24px; margin: 0;">Hole <span id="selection-hole-num">1</span></h2>
+                <div style="text-align: center;">
+                    <h2 style="margin: 0; font-size: 20px; color:white;">Hole <span id="selection-hole-num">1</span>
+                    </h2>
+                    <span style="color: #7cfc00; font-size: 11px; letter-spacing: 1px;">SI: <span
+                            id="selection-hole-si">-</span></span>
+                </div>
 
-                <button class="undo-btn" onclick="undoLastHole()"
-                    style="background: none; border: 1px solid #444; color: #888; border-radius: 5px; padding: 5px 10px; font-size: 12px; cursor:pointer;">
-                    ↺ Undo
-                </button>
+                <button onclick="undoLastHole()" class="nav-icon-btn">↺ UNDO</button>
             </div>
-
-            <p style="color: #7cfc00; font-size: 14px; margin: 0 0 20px 0; text-align:center;">STROKE INDEX: <span
-                    id="selection-hole-si">-</span></p>
 
             <div style="margin-bottom: 20px; text-align: left;">
                 <p style="margin:0; color:#fff; font-size:1.1rem;">Wolf: <strong id="display-wolf-name"
