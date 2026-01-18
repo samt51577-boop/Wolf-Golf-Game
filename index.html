@@ -490,8 +490,11 @@
             <div class="input-section">
                 <label><i class="icon">⛳</i> Course</label>
                 <div class="select-wrapper">
-                    <select>
-                        <option>Willow Creek</option>
+                    <select id="course-select">
+                        <option value="Willow Creek">Willow Creek</option>
+                        <option value="DMGCC North">DMGCC North</option>
+                        <option value="DMGCC South">DMGCC South</option>
+                        <option value="Glen Oaks">Glen Oaks</option>
                     </select>
                 </div>
             </div>
@@ -558,7 +561,8 @@
                     <button class="undo-btn" onclick="undoLastHole()">↺ Undo</button>
                 </div>
                 <p style="color: var(--neon-green); font-weight:bold; letter-spacing:1px; margin-top:5px;">STROKE INDEX:
-                    <span id="selection-hole-si">-</span></p>
+                    <span id="selection-hole-si">-</span>
+                </p>
             </div>
 
             <div style="margin-bottom: 20px; text-align: left;">
@@ -618,16 +622,26 @@
             </div>
 
             <div class="scoring-actions" style="margin-top:30px;">
-                <button class="win-btn wolf-side" onclick="resolveHole('wolf')">
-                    <span id="wolf-team-names">Wolf Team</span> Wins
+                <!-- Automatic Scoring -->
+                <button onclick="submitScores()"
+                    style="width:100%; padding:18px; margin-bottom:25px; border-radius:12px; font-weight:900; background:linear-gradient(135deg, #3b82f6, #2563eb); border:none; color:white; font-size:1.1rem; box-shadow: 0 4px 15px rgba(59,130,246,0.3); cursor:pointer;">
+                    ✅ SUBMIT SCORES (AUTO)
                 </button>
 
-                <div style="text-align:center; color:#444; margin:15px 0; font-weight:bold; letter-spacing:1px;">VS
+                <div style="border-top:1px solid #333; margin:20px 0; position:relative;">
+                    <span
+                        style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:#18181b; padding:0 10px; color:#555; font-size:0.8rem;">MANUAL
+                        OVERRIDE</span>
                 </div>
 
-                <button class="win-btn pack-side" onclick="resolveHole('pack')">
-                    The Pack Wins
-                </button>
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button class="win-btn wolf-side" onclick="resolveHole('wolf')" style="flex:1; font-size:0.9rem;">
+                        <span id="wolf-team-names">Wolf Team</span> Wins
+                    </button>
+                    <button class="win-btn pack-side" onclick="resolveHole('pack')" style="flex:1; font-size:0.9rem;">
+                        The Pack Wins
+                    </button>
+                </div>
             </div>
 
             <button class="back-btn" onclick="goBackToSelection()" style="margin-top:30px;">Change Alliance</button>
@@ -686,6 +700,23 @@
             </div>
         </div>
     </div> <!-- End container -->
+
+    <!-- Tie Modal -->
+    <div id="tie-modal" class="modal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
+        <div class="modal-content"
+            style="background:#1f2125; padding:30px; border-radius:15px; text-align:center; max-width:90%; border:1px solid #444;">
+            <h3 style="color:white; margin-top:0; font-size:1.5rem;">Result: TIE</h3>
+            <p style="color:#ccc; margin:15px 0;">No points awarded. Proceed to next hole?</p>
+            <div style="margin-top:25px; display:flex; gap:15px; justify-content:center;">
+                <button onclick="confirmTie()"
+                    style="background:var(--neon-green); color:black; border:none; padding:12px 24px; border-radius:8px; font-weight:bold; cursor:pointer; font-size:1rem;">YES,
+                    NEXT HOLE</button>
+                <button onclick="hideTieModal()"
+                    style="background:transparent; color:#fff; border:1px solid #555; padding:12px 24px; border-radius:8px; cursor:pointer; font-size:1rem;">CANCEL</button>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>

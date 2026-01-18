@@ -21,13 +21,32 @@ let currentHoleData = {
     isBlind: false
 };
 
-// COURSE DATA - WILLOW CREEK
-// Note: SI is Stroke Index (Difficulty). 1 is hardest, 18 is easiest.
-const willowCreekData = {
-    name: "Willow Creek",
-    si: [9, 5, 1, 15, 7, 13, 11, 17, 3, 6, 8, 16, 12, 10, 2, 18, 4, 14],
-    par: [4, 5, 4, 3, 5, 4, 4, 3, 4, 4, 4, 3, 4, 4, 4, 3, 5, 4]
+// COURSE DATA
+const courseLibrary = {
+    "Willow Creek": {
+        name: "Willow Creek",
+        si: [9, 5, 1, 15, 7, 13, 11, 17, 3, 6, 8, 16, 12, 10, 2, 18, 4, 14],
+        par: [4, 5, 4, 3, 5, 4, 4, 3, 4, 4, 4, 3, 4, 4, 4, 3, 5, 4]
+    },
+    "DMGCC North": {
+        name: "DMGCC North",
+        par: [4, 5, 3, 4, 3, 4, 4, 4, 5, 4, 4, 3, 5, 4, 4, 4, 3, 5],
+        si: [5, 9, 13, 7, 15, 1, 3, 11, 17, 18, 6, 16, 10, 2, 8, 14, 12, 4]
+    },
+    "DMGCC South": {
+        name: "DMGCC South",
+        par: [4, 5, 4, 4, 3, 5, 4, 3, 4, 4, 4, 4, 5, 4, 3, 5, 3, 4],
+        si: [3, 7, 9, 1, 15, 11, 5, 17, 13, 14, 10, 4, 6, 12, 16, 2, 18, 8]
+    },
+    "Glen Oaks": {
+        name: "Glen Oaks",
+        par: [4, 4, 4, 3, 4, 5, 4, 3, 5, 4, 4, 3, 4, 4, 4, 3, 5, 4],
+        si: [5, 13, 1, 17, 7, 11, 9, 15, 3, 6, 14, 4, 18, 8, 12, 10, 16, 2]
+    }
 };
+
+// Aliases for compatibility
+const willowCreekData = courseLibrary["Willow Creek"];
 
 // ----------------------------------------------------
 // BOOT SEQUENCE
@@ -198,8 +217,11 @@ function validateAndStart() {
     gameState = freshState;
     gameState.settings.basePointValue = pointValue; // Lock in the wager
 
-    // Set Active Course (Willow Creek Default) - Matches user request
-    gameState.activeCourse = willowCreekData;
+    // Set Active Course from Selector
+    const courseSelect = document.getElementById('course-select');
+    const selectedCourseName = courseSelect ? courseSelect.value : "Willow Creek";
+    // Ensure we have a valid course object
+    gameState.activeCourse = (courseLibrary && courseLibrary[selectedCourseName]) ? courseLibrary[selectedCourseName] : willowCreekData;
 
     rows.forEach((row, index) => {
         const nameInput = row.querySelector('.name-input');
@@ -375,28 +397,97 @@ function selectBlindWolf() {
 // SCORING & STROKE LOGIC
 // ----------------------------------------------------
 
-function renderHandicapDots(playerIndex, holeIdx) {
-    if (!gameState.players || gameState.players.length === 0) return '';
+function calculateAllocatedStrokes(playerIndex, holeIdx) {
+    if (!gameState.players || gameState.players.length === 0) return 0;
     const minHcp = Math.min(...gameState.players.map(p => p.hcp));
     const strokeGap = Math.round(gameState.players[playerIndex].hcp - minHcp);
-
-    // Safety check for SI data using activeCourse
     const siList = (gameState.activeCourse && gameState.activeCourse.si) ? gameState.activeCourse.si : willowCreekData.si;
     const holeSI = siList[holeIdx] || 18;
 
+    let strokes = 0;
+    if (holeSI <= strokeGap) strokes++;
+    if (strokeGap > 18 && holeSI <= (strokeGap - 18)) strokes++;
+
+    return strokes;
+}
+
+function calculateNet(gross, playerIndex) {
+    const holeIdx = gameState.currentHole - 1;
+    const strokes = calculateAllocatedStrokes(playerIndex, holeIdx);
+    return gross - strokes;
+}
+
+function renderHandicapDots(playerIndex, holeIdx) {
+    const strokes = calculateAllocatedStrokes(playerIndex, holeIdx);
     let dots = '';
-
-    // One dot if the Stroke Index is within the gap
-    if (holeSI <= strokeGap) {
+    for (let i = 0; i < strokes; i++) {
         dots += '<span class="stroke-dot" style="color:var(--neon-green)">●</span>';
     }
-
-    // Second dot for gaps greater than 18
-    if (strokeGap > 18 && holeSI <= (strokeGap - 18)) {
-        dots += '<span class="stroke-dot" style="color:var(--neon-green)">●</span>';
-    }
-
     return dots;
+}
+
+function automateWinner(holeScores) {
+    const wolfTeam = [gameState.wolfIndex];
+    if (currentHoleData.partnerIndex !== null) wolfTeam.push(currentHoleData.partnerIndex);
+
+    const pack = gameState.players.map((_, i) => i).filter(i => !wolfTeam.includes(i));
+
+    // Get all net scores for the hole
+    // holeScores is array of numbers corresponding to player indices 0..N
+    const netScores = holeScores.map((score, i) => calculateNet(score, i));
+
+    const lowScore = Math.min(...netScores);
+    const highScore = Math.max(...netScores);
+
+    // Who has low?
+    const wolfHasLow = wolfTeam.some(i => netScores[i] === lowScore);
+    const packHasLow = pack.some(i => netScores[i] === lowScore);
+
+    // Who has high?
+    const wolfHasHigh = wolfTeam.some(i => netScores[i] === highScore);
+    const packHasHigh = pack.some(i => netScores[i] === highScore);
+
+    // Rule: To win, you must have Low Net. 
+    // If you also have High Net, do you lose? 
+    // User Snippet: if (wolfHasLow && !wolfHasHigh) return "WOLF_WIN";
+    // This implies "No junk" rule? Or standard Wolf?
+    // In standard Wolf, lowest net Score wins the hole. If Tie -> Wash/Carry.
+    // The user's provided logic is strict: Must have Low AND NOT High.
+
+    if (wolfHasLow && !wolfHasHigh) return "WOLF_WIN";
+    else if (wolfHasLow && wolfHasHigh) return "TIE"; // Wash if you have Low and High? (Unusual but following logic implication)
+
+    if (packHasLow && !packHasHigh) return "PACK_WIN";
+
+    // If both have low (Tie for best ball) -> Tie.
+    return "TIE";
+}
+
+function submitScores() {
+    const inputs = document.querySelectorAll('.wulf-score-input');
+    let scores = new Array(gameState.players.length).fill(0);
+    let allFilled = true;
+
+    inputs.forEach(input => {
+        const val = parseInt(input.value);
+        const idx = parseInt(input.getAttribute('data-player-index'));
+        if (isNaN(val)) allFilled = false;
+        else scores[idx] = val;
+    });
+
+    if (!allFilled) {
+        alert("Please enter scores for all players.");
+        return;
+    }
+
+    const result = automateWinner(scores);
+    if (result === 'WOLF_WIN') {
+        if (confirm("Wolf Team Wins! Confirm?")) resolveHole('wolf');
+    } else if (result === 'PACK_WIN') {
+        if (confirm("The Pack Wins! Confirm?")) resolveHole('pack');
+    } else {
+        alert("It's a TIE (or Wash) according to the rules. No points awarded automatically. Please use manual override if needed.");
+    }
 }
 
 function showScoringScreen() {
@@ -408,7 +499,6 @@ function showScoringScreen() {
     document.getElementById('scoring-hole-num').innerText = holeNum;
 
     const holeIdx = holeNum - 1;
-    // Use activeCourse
     const course = gameState.activeCourse || willowCreekData;
     const si = course.si[holeIdx];
     const par = course.par[holeIdx];
@@ -443,7 +533,7 @@ function showScoringScreen() {
                 </div>
             </div>
             <div class="score-input-wrapper">
-                <input type="number" class="wulf-score-input" placeholder="Gross" style="width: 80px; padding: 10px; border-radius: 8px; border: 1px solid #333; background: #222; color: white; text-align: center; font-size: 16px;">
+                <input type="number" class="wulf-score-input" data-player-index="${index}" placeholder="Gross" style="width: 80px; padding: 10px; border-radius: 8px; border: 1px solid #333; background: #222; color: white; text-align: center; font-size: 16px;">
             </div>
         </div>
         `;
@@ -480,11 +570,14 @@ function resolveHole(winnerSide) {
     // Determine base points per stake
     let points = 0;
 
-    if (currentHoleData.isBlind) {
+    if (winnerSide === 'tie') {
+        // No points, just log and advance
+        points = 0;
+    } else if (currentHoleData.isBlind) {
         if (winnerSide === 'wolf') {
             pointSwing[gameState.wolfIndex] = 6;
             points = 6;
-        } else {
+        } else if (winnerSide === 'pack') {
             gameState.players.forEach((p, i) => { if (i !== gameState.wolfIndex) pointSwing[i] = 4; });
             points = 4;
         }
@@ -492,7 +585,7 @@ function resolveHole(winnerSide) {
         if (winnerSide === 'wolf') {
             pointSwing[gameState.wolfIndex] = 4;
             points = 4;
-        } else {
+        } else if (winnerSide === 'pack') {
             gameState.players.forEach((p, i) => { if (i !== gameState.wolfIndex) pointSwing[i] = 1; });
             points = 1;
         }
@@ -501,7 +594,7 @@ function resolveHole(winnerSide) {
             pointSwing[gameState.wolfIndex] = 2;
             pointSwing[currentHoleData.partnerIndex] = 2;
             points = 2;
-        } else {
+        } else if (winnerSide === 'pack') {
             gameState.players.forEach((p, i) => {
                 if (i !== gameState.wolfIndex && i !== currentHoleData.partnerIndex) {
                     pointSwing[i] = 3;
@@ -515,6 +608,57 @@ function resolveHole(winnerSide) {
     saveHoleToHistory(winnerSide, points, pointSwing);
     saveToPhone();
     moveToNextHole();
+}
+
+// TIE MODAL FUNCTIONS
+function showTieModal(msg) {
+    const modal = document.getElementById('tie-modal');
+    if (modal) {
+        const p = modal.querySelector('p');
+        if (p) p.innerText = msg;
+        modal.style.display = 'flex';
+    } else {
+        // Fallback if modal not present
+        if (confirm(msg)) confirmTie();
+    }
+}
+
+function hideTieModal() {
+    const modal = document.getElementById('tie-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function confirmTie() {
+    hideTieModal();
+    resolveHole('tie');
+}
+
+function submitScores() {
+    const inputs = document.querySelectorAll('.wulf-score-input');
+    let scores = new Array(gameState.players.length).fill(0);
+    let allFilled = true;
+
+    inputs.forEach(input => {
+        const val = parseInt(input.value);
+        const idx = parseInt(input.getAttribute('data-player-index'));
+        if (isNaN(val)) allFilled = false;
+        else scores[idx] = val;
+    });
+
+    if (!allFilled) {
+        alert("Please enter scores for all players.");
+        return;
+    }
+
+    const result = automateWinner(scores);
+    if (result === 'WOLF_WIN') {
+        if (confirm("Wolf Team Wins! Confirm?")) resolveHole('wolf');
+    } else if (result === 'PACK_WIN') {
+        if (confirm("The Pack Wins! Confirm?")) resolveHole('pack');
+    } else {
+        // TIE
+        showTieModal("Hole is a push. No points awarded. Provide to next hole?");
+    }
 }
 
 function saveHoleToHistory(winnerSide, pointsAwarded, pointSwing) {
