@@ -347,12 +347,12 @@ function renderSelectionScreen() {
 
             let dotHtml = '';
             if (hasDot) {
-                // Use wulf-dot class as defined in stylesheet
-                dotHtml = '<span class="wulf-dot">●</span>';
+                // User Style
+                dotHtml = '<span style="color: #7cfc00; margin-left: 5px;">●</span>';
             }
 
             const btn = document.createElement('button');
-            btn.className = 'wulf-blue-btn';
+            btn.className = 'wulf-btn'; // Updated class
 
             btn.innerHTML = `SELECT ${player.name.toUpperCase()} (${player.hcp}) ${dotHtml}`;
             btn.onclick = () => selectAlliance(index);
@@ -563,6 +563,20 @@ function showScoringScreen() {
     document.getElementById('wolf-team-names').innerText = buttonText;
     // Updated ID target from `pop-breakdown` to `score-inputs-container`
     document.getElementById('score-inputs-container').innerHTML = rowsHTML;
+}
+
+function goToMainPage() {
+    const confirmExit = confirm("Return to main page? This will reset the current round scores.");
+
+    if (confirmExit) {
+        // Hide game views
+        document.querySelectorAll('.game-view').forEach(el => el.style.display = 'none');
+        // Show setup
+        document.getElementById('setup-screen').style.display = 'block';
+
+        // Reset Logic
+        clearMatch();
+    }
 }
 
 function resolveHole(winnerSide) {

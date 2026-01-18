@@ -246,7 +246,8 @@
         }
 
         .partner-btn,
-        .wulf-blue-btn {
+        .wulf-blue-btn,
+        .wulf-btn {
             width: 100%;
             padding: 18px;
             background: #3b82f6;
@@ -262,7 +263,8 @@
         }
 
         .partner-btn:hover,
-        .wulf-blue-btn:hover {
+        .wulf-blue-btn:hover,
+        .wulf-btn:hover {
             background: #2563eb;
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
@@ -553,26 +555,33 @@
     <div class="wulf-container">
         <!-- Step 3: Game View -->
         <div id="selection-screen" class="game-view">
-            <!-- Hole Card -->
-            <div class="hole-status" style="margin-bottom: 20px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h2 style="color: white; font-size: 24px; margin: 0;">Hole <span id="selection-hole-num">1</span>
-                    </h2>
-                    <button class="undo-btn" onclick="undoLastHole()">↺ Undo</button>
-                </div>
-                <p style="color: var(--neon-green); font-weight:bold; letter-spacing:1px; margin-top:5px;">STROKE INDEX:
-                    <span id="selection-hole-si">-</span>
-                </p>
+            <!-- Hole Nav -->
+            <div class="hole-nav"
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <button onclick="goToMainPage()" class="menu-btn"
+                    style="background: none; border: 1px solid #444; color: #888; border-radius: 5px; padding: 5px 10px; font-size: 12px; cursor:pointer;">
+                    ☰ MENU
+                </button>
+
+                <h2 style="color: white; font-size: 24px; margin: 0;">Hole <span id="selection-hole-num">1</span></h2>
+
+                <button class="undo-btn" onclick="undoLastHole()"
+                    style="background: none; border: 1px solid #444; color: #888; border-radius: 5px; padding: 5px 10px; font-size: 12px; cursor:pointer;">
+                    ↺ Undo
+                </button>
             </div>
+
+            <p style="color: #7cfc00; font-size: 14px; margin: 0 0 20px 0; text-align:center;">STROKE INDEX: <span
+                    id="selection-hole-si">-</span></p>
 
             <div style="margin-bottom: 20px; text-align: left;">
                 <p style="margin:0; color:#fff; font-size:1.1rem;">Wolf: <strong id="display-wolf-name"
                         style="color:var(--neon-green);"></strong></p>
             </div>
 
-            <!-- Partner Buttons -->
+            <!-- Partner Buttons (Selection List) -->
             <div class="action-prompt">
-                <div id="partner-buttons" class="button-grid" style="display:flex; flex-direction:column; gap:10px;">
+                <div class="selection-list" id="partner-buttons" style="display:flex; flex-direction:column; gap:10px;">
                 </div>
 
                 <div style="margin: 20px 0 20px 0; border-top: 1px solid #333; padding-top: 20px;">
