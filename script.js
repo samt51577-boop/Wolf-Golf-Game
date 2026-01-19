@@ -283,7 +283,8 @@ function setManualWolf(index) {
 function renderHole() {
     gameState.wolfIndex = getWolfForHole(gameState.currentHole);
     currentHoleData.wolfIndex = gameState.wolfIndex;
-    currentHoleData.pressed = false; // Reset Press
+    currentHoleData.multiplier = 1; // Reset Multiplier
+    currentHoleData.pressed = false; // Deprecated but kept for safety if referenced elsewhere temporarily
 
     const setup = document.getElementById('setup-screen');
     if (setup) setup.style.display = 'none'; // Ensure setup is hidden
@@ -312,24 +313,29 @@ function getUpcomingWolves() {
     return upcoming.join(', ');
 }
 
-function handlePress() {
-    if (currentHoleData.pressed) {
-        alert("Hole is already pressed!");
-        return;
-    }
-    currentHoleData.pressed = true;
+let pressLog = [];
 
-    // UI Update
+function handlePress() {
+    if (!currentHoleData.multiplier) currentHoleData.multiplier = 1;
+    currentHoleData.multiplier *= 2;
+    currentHoleData.pressed = true; // Sync for consistency
+
     const base = gameState.settings.basePointValue;
-    const currentVal = base * 2;
+    const currentVal = base * currentHoleData.multiplier;
+
+    // Log the event
+    pressLog.push({
+        hole: gameState.currentHole,
+        newWager: currentVal
+    });
 
     const el = document.getElementById('current-wager-display');
     if (el) {
         el.innerText = currentVal.toFixed(2);
-        el.style.color = "#ef4444"; // Visual feedback (Red)
+        el.style.color = "#ef4444";
     }
 
-    alert(`The stakes have been PRESSED! Now playing for $${currentVal.toFixed(2)} per point.`);
+    alert(`PRESS CONFIRMED! Multiplier: ${currentHoleData.multiplier}x. Value: $${currentVal.toFixed(2)} / pt`);
 }
 // Keeping the onclick name consistent
 const togglePress = handlePress;
@@ -648,7 +654,7 @@ function resolveHole(winnerSide) {
     let pointSwing = new Array(gameState.players.length).fill(0);
     // Determine base points per stake
     let points = 0;
-    const mult = currentHoleData.pressed ? 2 : 1;
+    const mult = currentHoleData.multiplier || 1;
 
     if (winnerSide === 'tie') {
         // No points, just log and advance
