@@ -938,3 +938,8 @@ function generateShareQR() {
         qrContainer.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`;
     }
 }
+
+function togglePrivacy() {
+    const isLocked = document.getElementById('privacy-toggle').checked;
+    console.log("Scoring Locked:", isLocked);
+}

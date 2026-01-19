@@ -486,6 +486,59 @@
             font-weight: bold;
             color: var(--neon-green);
         }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            ;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+        }
+
+        input:checked+.slider {
+            background-color: var(--neon-green);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(16px);
+        }
+
+        .slider.round {
+            border-radius: 24px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
     </style>
 </head>
 
@@ -560,6 +613,15 @@
                         <span class="label">Blind Wolf</span>
                         <span class="val">6x</span>
                     </div>
+                </div>
+
+                <div class="menu-option"
+                    style="display: flex; justify-content: space-between; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 12px; margin-top: 20px; align-items:center;">
+                    <span style="font-size: 0.8rem; color: #ccc; font-weight:bold;">LOCK SCORING TO THIS DEVICE</span>
+                    <label class="switch">
+                        <input type="checkbox" id="privacy-toggle" checked onclick="togglePrivacy()">
+                        <span class="slider round"></span>
+                    </label>
                 </div>
             </div>
 
