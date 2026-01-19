@@ -329,6 +329,27 @@ function getSelectionPredictability(player, holeSI) {
     return "RISKY PICK";
 }
 
+function getWolfRecommendation() {
+    // Determine minHcp here as it's not a global property
+    const minHcp = Math.min(...gameState.players.map(p => p.hcp));
+    const holeSI = gameState.activeCourse.si[gameState.currentHole - 1];
+
+    // Sort players by best potential 'Net Par'
+    const candidates = gameState.players
+        .map((p, i) => ({ ...p, originalIndex: i }))
+        .filter((_, i) => i !== gameState.wolfIndex); // Exclude the Wolf
+
+    const best = candidates
+        .map(player => ({
+            name: player.name,
+            // Calculate actual gap for Pop
+            advantage: (player.hcp - minHcp) >= holeSI ? 2 : 1
+        }))
+        .sort((a, b) => b.advantage - a.advantage)[0];
+
+    return best ? best.name : "None";
+}
+
 function renderSelectionScreen() {
     const wolf = gameState.players[gameState.wolfIndex];
     document.getElementById('display-wolf-name').innerText = wolf.name;
