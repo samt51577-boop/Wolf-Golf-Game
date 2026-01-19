@@ -283,6 +283,7 @@ function setManualWolf(index) {
 function renderHole() {
     gameState.wolfIndex = getWolfForHole(gameState.currentHole);
     currentHoleData.wolfIndex = gameState.wolfIndex;
+    currentHoleData.pressed = false; // Reset Press
 
     const setup = document.getElementById('setup-screen');
     if (setup) setup.style.display = 'none'; // Ensure setup is hidden
@@ -311,9 +312,27 @@ function getUpcomingWolves() {
     return upcoming.join(', ');
 }
 
-function togglePress() {
-    alert("Press feature coming soon! 🔨");
+function handlePress() {
+    if (currentHoleData.pressed) {
+        alert("Hole is already pressed!");
+        return;
+    }
+    currentHoleData.pressed = true;
+
+    // UI Update
+    const base = gameState.settings.basePointValue;
+    const currentVal = base * 2;
+
+    const el = document.getElementById('current-wager-display');
+    if (el) {
+        el.innerText = currentVal.toFixed(2);
+        el.style.color = "#ef4444"; // Visual feedback (Red)
+    }
+
+    alert(`The stakes have been PRESSED! Now playing for $${currentVal.toFixed(2)} per point.`);
 }
+// Keeping the onclick name consistent
+const togglePress = handlePress;
 
 function getSelectionPredictability(player, holeSI) {
     const minHcp = Math.min(...gameState.players.map(p => p.hcp));
@@ -629,38 +648,39 @@ function resolveHole(winnerSide) {
     let pointSwing = new Array(gameState.players.length).fill(0);
     // Determine base points per stake
     let points = 0;
+    const mult = currentHoleData.pressed ? 2 : 1;
 
     if (winnerSide === 'tie') {
         // No points, just log and advance
         points = 0;
     } else if (currentHoleData.isBlind) {
         if (winnerSide === 'wolf') {
-            pointSwing[gameState.wolfIndex] = 6;
-            points = 6;
+            pointSwing[gameState.wolfIndex] = 6 * mult;
+            points = 6 * mult;
         } else if (winnerSide === 'pack') {
-            gameState.players.forEach((p, i) => { if (i !== gameState.wolfIndex) pointSwing[i] = 4; });
-            points = 4;
+            gameState.players.forEach((p, i) => { if (i !== gameState.wolfIndex) pointSwing[i] = 4 * mult; });
+            points = 4 * mult;
         }
     } else if (currentHoleData.isLoneWolf) {
         if (winnerSide === 'wolf') {
-            pointSwing[gameState.wolfIndex] = 4;
-            points = 4;
+            pointSwing[gameState.wolfIndex] = 4 * mult;
+            points = 4 * mult;
         } else if (winnerSide === 'pack') {
-            gameState.players.forEach((p, i) => { if (i !== gameState.wolfIndex) pointSwing[i] = 1; });
-            points = 1;
+            gameState.players.forEach((p, i) => { if (i !== gameState.wolfIndex) pointSwing[i] = 1 * mult; });
+            points = 1 * mult;
         }
     } else {
         if (winnerSide === 'wolf') {
-            pointSwing[gameState.wolfIndex] = 2;
-            pointSwing[currentHoleData.partnerIndex] = 2;
-            points = 2;
+            pointSwing[gameState.wolfIndex] = 2 * mult;
+            pointSwing[currentHoleData.partnerIndex] = 2 * mult;
+            points = 2 * mult;
         } else if (winnerSide === 'pack') {
             gameState.players.forEach((p, i) => {
                 if (i !== gameState.wolfIndex && i !== currentHoleData.partnerIndex) {
-                    pointSwing[i] = 3;
+                    pointSwing[i] = 3 * mult;
                 }
             });
-            points = 3;
+            points = 3 * mult;
         }
     }
 
