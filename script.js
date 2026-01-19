@@ -315,6 +315,20 @@ function togglePress() {
     alert("Press feature coming soon! 🔨");
 }
 
+function getSelectionPredictability(player, holeSI) {
+    const minHcp = Math.min(...gameState.players.map(p => p.hcp));
+    const strokeGap = Math.round(player.hcp - minHcp);
+
+    // If they have a stroke on a difficult hole, they are a "Strong" pick
+    if (holeSI <= strokeGap && holeSI <= 9) return "STRONG PICK";
+    // If they have a stroke on an easy hole
+    if (holeSI <= strokeGap) return "STABLE PICK";
+    // Scratch players are always "Stable"
+    if (player.hcp <= 2) return "STABLE PICK";
+
+    return "RISKY PICK";
+}
+
 function renderSelectionScreen() {
     const wolf = gameState.players[gameState.wolfIndex];
     document.getElementById('display-wolf-name').innerText = wolf.name;
@@ -351,10 +365,21 @@ function renderSelectionScreen() {
                 dotHtml = '<span style="color: #7cfc00; margin-left: 5px;">●</span>';
             }
 
-            const btn = document.createElement('button');
-            btn.className = 'wulf-btn'; // Updated class
+            // Predictability Logic
+            const predictability = getSelectionPredictability(player, si);
+            let predColor = '#9ca3af'; // Default/Stable
+            if (predictability === 'STRONG PICK') predColor = '#7cfc00';
+            else if (predictability === 'RISKY PICK') predColor = '#ef4444';
 
-            btn.innerHTML = `SELECT ${player.name.toUpperCase()} (${player.hcp}) ${dotHtml}`;
+            const btn = document.createElement('button');
+            btn.className = 'wulf-btn';
+
+            btn.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>SELECT ${player.name.toUpperCase()} (${player.hcp}) ${dotHtml}</span>
+                    <span style="font-size:10px; color:${predColor}; background:rgba(0,0,0,0.5); padding:3px 8px; border-radius:10px; font-weight:bold; letter-spacing:0.5px;">${predictability}</span>
+                </div>
+            `;
             btn.onclick = () => selectAlliance(index);
             container.appendChild(btn);
         }
