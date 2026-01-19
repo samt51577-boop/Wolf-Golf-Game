@@ -8,7 +8,9 @@ const initialState = {
         loneWolfPoints: 4,
         blindWolfPoints: 6,
         basePointValue: 1.00 // Default wager
-    }
+    },
+    currentWagerBasis: 1.00,
+    pressLog: []
 };
 
 let gameState = JSON.parse(JSON.stringify(initialState));
@@ -216,6 +218,7 @@ function validateAndStart() {
     const freshState = JSON.parse(JSON.stringify(initialState));
     gameState = freshState;
     gameState.settings.basePointValue = pointValue; // Lock in the wager
+    gameState.currentWagerBasis = pointValue;
 
     // Set Active Course from Selector
     const courseSelect = document.getElementById('course-select');
@@ -313,32 +316,55 @@ function getUpcomingWolves() {
     return upcoming.join(', ');
 }
 
-let pressLog = [];
-
 function handlePress() {
-    if (!currentHoleData.multiplier) currentHoleData.multiplier = 1;
-    currentHoleData.multiplier *= 2;
-    currentHoleData.pressed = true; // Sync for consistency
+    // 1. Double the persistent basis for this and all future holes
+    gameState.currentWagerBasis *= 2;
 
-    const base = gameState.settings.basePointValue;
-    const currentVal = base * currentHoleData.multiplier;
-
-    // Log the event
-    pressLog.push({
+    // 2. Log it
+    gameState.pressLog.push({
         hole: gameState.currentHole,
-        newWager: currentVal
+        newAmount: gameState.currentWagerBasis
     });
 
+    // 3. Update UI
     const el = document.getElementById('current-wager-display');
     if (el) {
-        el.innerText = currentVal.toFixed(2);
+        el.innerText = gameState.currentWagerBasis.toFixed(2);
         el.style.color = "#ef4444";
     }
 
-    alert(`PRESS CONFIRMED! Multiplier: ${currentHoleData.multiplier}x. Value: $${currentVal.toFixed(2)} / pt`);
+    saveToPhone();
+
+    alert(`PRESS CONFIRMED! Stakes doubled to $${gameState.currentWagerBasis.toFixed(2)} for this and future holes!`);
 }
 // Keeping the onclick name consistent
 const togglePress = handlePress;
+
+function renderPressHistory() {
+    const historyContainer = document.getElementById('press-history-list');
+    if (!historyContainer) return;
+
+    // Clear the existing list in the menu
+    historyContainer.innerHTML = "";
+
+    // If no presses have occurred yet
+    if (!gameState.pressLog || gameState.pressLog.length === 0) {
+        historyContainer.innerHTML = "<li>No presses recorded.</li>";
+        return;
+    }
+
+    // Build the list from the log
+    gameState.pressLog.forEach(entry => {
+        const listItem = document.createElement('li');
+        listItem.style.padding = "10px 0";
+        listItem.style.borderBottom = "1px solid #333";
+        listItem.innerHTML = `
+            <span style="color: #888;">Hole ${entry.hole}:</span> 
+            <span style="color: #7cfc00; font-weight: bold;"> Stakes doubled to $${entry.newAmount.toFixed(2)}</span>
+        `;
+        historyContainer.appendChild(listItem);
+    });
+}
 
 function getSelectionPredictability(player, holeSI) {
     const minHcp = Math.min(...gameState.players.map(p => p.hcp));
@@ -434,8 +460,11 @@ function renderSelectionScreen() {
     // Update Betting Tools
     const wagerEl = document.getElementById('current-wager-display');
     if (wagerEl) {
-        const val = (gameState.settings && gameState.settings.basePointValue) ? gameState.settings.basePointValue : 1.00;
+        const val = gameState.currentWagerBasis || gameState.settings.basePointValue || 1.00;
         wagerEl.innerText = val.toFixed(2);
+        if (gameState.settings.basePointValue && val > gameState.settings.basePointValue) {
+            wagerEl.style.color = "#ef4444";
+        }
     }
 
     const upcomingEl = document.getElementById('upcoming-wolves-display');
@@ -637,7 +666,7 @@ function showScoringScreen() {
 }
 
 function goToMainPage() {
-    const confirmExit = confirm("Return to main page? This will reset the current round scores.");
+    const confirmExit = confirm("Open Main Menu? Game will be paused.");
 
     if (confirmExit) {
         // Hide game views
@@ -645,8 +674,10 @@ function goToMainPage() {
         // Show setup
         document.getElementById('setup-screen').style.display = 'block';
 
-        // Reset Logic
-        clearMatch();
+        if (typeof renderPressHistory === 'function') renderPressHistory();
+
+        // Reset Logic - DISABLED
+        // clearMatch();
     }
 }
 
@@ -654,7 +685,9 @@ function resolveHole(winnerSide) {
     let pointSwing = new Array(gameState.players.length).fill(0);
     // Determine base points per stake
     let points = 0;
-    const mult = currentHoleData.multiplier || 1;
+    const mult = (gameState.currentWagerBasis && gameState.settings.basePointValue)
+        ? (gameState.currentWagerBasis / gameState.settings.basePointValue)
+        : 1;
 
     if (winnerSide === 'tie') {
         // No points, just log and advance
@@ -944,7 +977,7 @@ function showRecapScreen() {
     const listContainer = document.getElementById('summary-list');
     listContainer.innerHTML = '';
 
-    // We reuse the list style but make it prominent
+    // Summary List
     let html = "<ul style='padding:0; list-style:none;'>";
     settlements.forEach(s => {
         const color = s.balance >= 0 ? 'var(--neon-green)' : '#ef4444';
@@ -958,8 +991,49 @@ function showRecapScreen() {
        `;
     });
     html += "</ul>";
-
     listContainer.innerHTML = html;
+
+    // --- ROUND LOG ---
+    const scoreLog = document.getElementById('score-history');
+    if (scoreLog) {
+        scoreLog.innerHTML = "";
+        if (!gameState.history || gameState.history.length === 0) {
+            scoreLog.innerHTML = "<li>No holes played.</li>";
+        } else {
+            // Show latest on top
+            gameState.history.slice().reverse().forEach(h => {
+                const li = document.createElement('li');
+                li.style.padding = "10px 0";
+                li.style.borderBottom = "1px solid #222";
+                li.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:#aaa;">Hole ${h.number}: <strong>${h.wolf}</strong> ${h.partner}</span>
+                        <span style="color:${h.result === 'Wolf' ? '#7cfc00' : '#3b82f6'}; font-weight:bold; font-size:0.9rem;">
+                            ${h.result.toUpperCase()} (+${h.points})
+                        </span>
+                    </div>
+                `;
+                scoreLog.appendChild(li);
+            });
+        }
+    }
+
+    // --- PRESS HISTORY ---
+    const pressLogList = document.getElementById('press-history-below-log');
+    if (pressLogList) {
+        pressLogList.innerHTML = "";
+        if (!gameState.pressLog || gameState.pressLog.length === 0) {
+            pressLogList.innerHTML = "<li>No presses.</li>";
+        } else {
+            gameState.pressLog.forEach(entry => {
+                const li = document.createElement('li');
+                li.style.padding = "8px 0";
+                li.style.borderBottom = "1px solid #222";
+                li.innerHTML = `<span style="color:#ef4444;">Hole ${entry.hole}</span>: <strong>Stakes -> $${entry.newAmount.toFixed(2)}</strong>`;
+                pressLogList.appendChild(li);
+            });
+        }
+    }
 }
 
 function generateRecap() {
