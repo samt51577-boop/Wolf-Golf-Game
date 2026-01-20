@@ -385,6 +385,8 @@ function handlePress() {
         el.style.color = "#ef4444";
     }
 
+    if (typeof renderPressHistory === 'function') renderPressHistory();
+
     saveToPhone();
 
     alert(`PRESS CONFIRMED! Stakes doubled to $${gameState.currentWagerBasis.toFixed(2)} for this and future holes!`);
@@ -710,11 +712,27 @@ function goToMainPage() {
         // Show setup
         document.getElementById('setup-screen').style.display = 'block';
 
-        if (typeof renderPressHistory === 'function') renderPressHistory();
+        // Show Resume Button if game exists
+        const resumeBtn = document.getElementById('resume-hunt-btn');
+        if (resumeBtn && gameState && gameState.players && gameState.players.length > 0) {
+            resumeBtn.style.display = 'block';
+            resumeBtn.innerText = "RESUME HOLE " + gameState.currentHole;
+        }
 
-        // Check if we can resume (we just paused, so yes)
-        checkResumeEligibility();
+        if (typeof renderPressHistory === 'function') renderPressHistory();
     }
+}
+
+function resumeGame() {
+    if (!gameState || !gameState.players || gameState.players.length === 0) {
+        alert("No active game to resume.");
+        return;
+    }
+
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('selection-screen').style.display = 'block';
+    // Re-render to ensure state is fresh
+    renderSelectionScreen();
 }
 
 function resolveHole(winnerSide) {
