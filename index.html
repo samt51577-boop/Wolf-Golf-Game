@@ -637,7 +637,12 @@
                 </ul>
             </div>
 
-            <div class="action-container" style="margin-top: 30px; text-align: center;">
+            <div class="action-container"
+                style="margin-top: 30px; text-align: center; display:flex; flex-direction:column; gap:15px;">
+                <button id="resume-hunt-btn" onclick="resumeGame()" class="wulf-primary-btn"
+                    style="display:none; background: #3b82f6; color:white; border:1px solid rgba(255,255,255,0.2);">
+                    RESUME HUNT
+                </button>
                 <button id="start-hunt-btn" onclick="validateAndStart()" class="wulf-primary-btn">
                     START THE HUNT
                 </button>
@@ -741,6 +746,11 @@
                         The Pack Wins
                     </button>
                 </div>
+                <!-- Manual Tie Button -->
+                <button class="reset-btn" onclick="resolveHole('tie')"
+                    style="margin-top:10px; width:100%; padding:12px; background:#2d3138; border:1px solid #444; color:#888;">
+                    Force Tie / Push
+                </button>
             </div>
 
             <button class="back-btn" onclick="goBackToSelection()" style="margin-top:30px;">Change Alliance</button>

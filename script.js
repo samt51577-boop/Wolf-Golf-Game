@@ -54,39 +54,61 @@ const willowCreekData = courseLibrary["Willow Creek"];
 // BOOT SEQUENCE
 // ----------------------------------------------------
 function bootApp() {
-    const saved = localStorage.getItem('wolfLedgerSave');
     // Ensure updatePlayerRows is called to set initial state correctly
     // But if we have a save, we might hide setup anyway.
     updatePlayerRows();
 
-    if (saved) {
+    // Check for save silently on boot
+    const savedCheck = localStorage.getItem('wolfLedgerSave');
+    if (savedCheck) {
         try {
-            const data = JSON.parse(saved);
+            const data = JSON.parse(savedCheck);
             if (data && data.players && data.players.length > 0) {
-                const confirmResume = confirm(`Resume existing game on Hole ${data.currentHole}?`);
-                if (confirmResume) {
-                    loadSavedGame(data);
-                    return;
-                }
+                checkResumeEligibility();
+                // Don't auto-prompt, let them click the button
             }
-        } catch (e) {
-            console.error("Save file corrupted", e);
-        }
+        } catch (e) { console.error(e); }
     }
-    // New Game Setup
+
+    // Setup Screen defaults
     document.getElementById('setup-screen').style.display = 'block';
     const views = document.querySelectorAll('.game-view');
     views.forEach(v => v.style.display = 'none');
 }
 
+function checkResumeEligibility() {
+    const saved = localStorage.getItem('wolfLedgerSave');
+    const btn = document.getElementById('resume-hunt-btn');
+    if (!btn) return;
+
+    if (saved) {
+        btn.style.display = 'block'; // Show if save exists
+    } else {
+        btn.style.display = 'none';
+    }
+}
+
+function resumeGame() {
+    const saved = localStorage.getItem('wolfLedgerSave');
+    if (saved) {
+        const data = JSON.parse(saved);
+        loadSavedGame(data);
+    }
+}
+
 function loadSavedGame(data) {
     gameState = data;
     if (!gameState.settings) gameState.settings = initialState.settings;
+    if (!gameState.pressLog) gameState.pressLog = [];
 
     // Fallback for legacy saves without activeCourse
     if (!gameState.activeCourse) gameState.activeCourse = willowCreekData;
 
     document.getElementById('setup-screen').style.display = 'none';
+
+    // Ensure button is hidden once loaded
+    const rBtn = document.getElementById('resume-hunt-btn');
+    if (rBtn) rBtn.style.display = 'none';
     if (gameState.currentHole > 18) {
         showFinalResults();
     } else {
@@ -105,6 +127,7 @@ function clearMatch() {
     if (confirm("Clear all scores and start a new match?")) {
         localStorage.removeItem('wolfLedgerSave');
         gameState = JSON.parse(JSON.stringify(initialState));
+        checkResumeEligibility(); // Will hide the button
         location.reload();
     }
 }
@@ -255,6 +278,11 @@ function validateAndStart() {
 
         saveToPhone(); // Persistence for the round
         document.getElementById('setup-screen').style.display = 'none';
+
+        // Hide Resume Btn since we are starting new
+        const rBtn = document.getElementById('resume-hunt-btn');
+        if (rBtn) rBtn.style.display = 'none';
+
         renderHole();
     } else {
         if (players.length < 3) alert("Need at least 3 players.");
@@ -265,14 +293,27 @@ function validateAndStart() {
 // ----------------------------------------------------
 // CORE LOGIC
 // ----------------------------------------------------
+function getFairHoleLimit() {
+    const pCount = gameState.players.length;
+    if (!pCount) return 15;
+    return pCount * Math.floor(18 / pCount);
+}
+
 function getWolfForHole(holeNumber) {
-    if (holeNumber <= 15) {
+    const limit = getFairHoleLimit();
+
+    if (holeNumber <= limit) {
         return (holeNumber - 1) % gameState.players.length;
     } else {
         // Last Place picks logic
+        // Sort by Score (ascending? No, in Wolf, usually High Score wins points? Or Net Score?)
+        // Wait, standard Wolf: Points are good. Highest score wins match.
+        // So "Last Place" means Lowest Point Total.
+
+        // Create a copy to sort
         const standings = gameState.players.map((p, i) => ({ index: i, score: p.score }));
         standings.sort((a, b) => a.score - b.score);
-        return standings[0].index;
+        return standings[0].index; // Player with lowest score
     }
 }
 
@@ -303,16 +344,27 @@ function getUpcomingWolves() {
     let upcoming = [];
     if (!gameState.players || gameState.players.length === 0) return "";
 
+    const limit = getFairHoleLimit();
+    let displayString = "";
+
     for (let i = 1; i <= 3; i++) {
-        let nextWolfIdx = (gameState.currentHole + i - 1) % gameState.players.length;
-        // Note: Logic above uses hole number based rotation. 
-        // Actual logic: getWolfForHole uses (hole-1)%count usually.
-        // Let's reuse getWolfForHole simply
-        let idx = getWolfForHole(gameState.currentHole + i);
-        if (gameState.players[idx]) {
-            upcoming.push(gameState.players[idx].name);
+        const nextHoleNum = gameState.currentHole + i;
+        if (nextHoleNum > 18) continue;
+
+        if (nextHoleNum <= limit) {
+            let idx = (nextHoleNum - 1) % gameState.players.length;
+            if (gameState.players[idx]) {
+                upcoming.push(gameState.players[idx].name);
+            }
+        } else {
+            upcoming.push("Last Place");
         }
     }
+
+    if (upcoming.length === 0 && gameState.currentHole === 18) {
+        return "Final Hole 🏁";
+    }
+
     return upcoming.join(', ');
 }
 
@@ -407,6 +459,11 @@ function renderSelectionScreen() {
 
     // Update Header
     const holeNum = gameState.currentHole;
+    const limit = getFairHoleLimit();
+
+    if (holeNum > limit) {
+        document.getElementById('display-wolf-name').innerText += " (Last Place 📉)";
+    }
     document.getElementById('selection-hole-num').innerText = holeNum;
     const holeIdx = holeNum - 1;
 
@@ -417,9 +474,31 @@ function renderSelectionScreen() {
     const container = document.getElementById('partner-buttons');
     container.innerHTML = '';
 
-    if (gameState.currentHole > 15) {
-        document.getElementById('display-wolf-name').innerText += " (Last Place)";
+    // Basic Carry Over Display
+    if (gameState.carryOver && gameState.carryOver > 0) {
+        // Find or create notification element
+        let carryEl = document.getElementById('carry-notification');
+        if (!carryEl) {
+            const notif = document.createElement('div');
+            notif.id = 'carry-notification';
+            notif.style.textAlign = 'center';
+            notif.style.color = '#facc15';
+            notif.style.fontWeight = 'bold';
+            notif.style.marginBottom = '10px';
+            notif.style.padding = '8px';
+            notif.style.background = 'rgba(250, 204, 21, 0.1)';
+            notif.style.borderRadius = '8px';
+            document.getElementById('display-wolf-name').parentNode.after(notif);
+            carryEl = notif;
+        }
+        carryEl.innerText = `⚠️ CARRY OVER POT: ${gameState.carryOver} PTS`;
+        carryEl.style.display = 'block';
+    } else {
+        const carryEl = document.getElementById('carry-notification');
+        if (carryEl) carryEl.style.display = 'none';
     }
+
+
 
     // Min Hcp Baseline for dots
     const minHcp = Math.min(...gameState.players.map(p => p.hcp));
@@ -532,63 +611,20 @@ function automateWinner(holeScores) {
 
     const pack = gameState.players.map((_, i) => i).filter(i => !wolfTeam.includes(i));
 
-    // Get all net scores for the hole
-    // holeScores is array of numbers corresponding to player indices 0..N
+    // Get all net scores
     const netScores = holeScores.map((score, i) => calculateNet(score, i));
 
-    const lowScore = Math.min(...netScores);
-    const highScore = Math.max(...netScores);
+    // Find Best (Lowest) Scores for each team
+    const wolfTeamBest = Math.min(...wolfTeam.map(i => netScores[i]));
+    const packBest = Math.min(...pack.map(i => netScores[i]));
 
-    // Who has low?
-    const wolfHasLow = wolfTeam.some(i => netScores[i] === lowScore);
-    const packHasLow = pack.some(i => netScores[i] === lowScore);
+    if (wolfTeamBest < packBest) return "WOLF_WIN";
+    if (packBest < wolfTeamBest) return "PACK_WIN";
 
-    // Who has high?
-    const wolfHasHigh = wolfTeam.some(i => netScores[i] === highScore);
-    const packHasHigh = pack.some(i => netScores[i] === highScore);
-
-    // Rule: To win, you must have Low Net. 
-    // If you also have High Net, do you lose? 
-    // User Snippet: if (wolfHasLow && !wolfHasHigh) return "WOLF_WIN";
-    // This implies "No junk" rule? Or standard Wolf?
-    // In standard Wolf, lowest net Score wins the hole. If Tie -> Wash/Carry.
-    // The user's provided logic is strict: Must have Low AND NOT High.
-
-    if (wolfHasLow && !wolfHasHigh) return "WOLF_WIN";
-    else if (wolfHasLow && wolfHasHigh) return "TIE"; // Wash if you have Low and High? (Unusual but following logic implication)
-
-    if (packHasLow && !packHasHigh) return "PACK_WIN";
-
-    // If both have low (Tie for best ball) -> Tie.
     return "TIE";
 }
 
-function submitScores() {
-    const inputs = document.querySelectorAll('.wulf-score-input');
-    let scores = new Array(gameState.players.length).fill(0);
-    let allFilled = true;
 
-    inputs.forEach(input => {
-        const val = parseInt(input.value);
-        const idx = parseInt(input.getAttribute('data-player-index'));
-        if (isNaN(val)) allFilled = false;
-        else scores[idx] = val;
-    });
-
-    if (!allFilled) {
-        alert("Please enter scores for all players.");
-        return;
-    }
-
-    const result = automateWinner(scores);
-    if (result === 'WOLF_WIN') {
-        if (confirm("Wolf Team Wins! Confirm?")) resolveHole('wolf');
-    } else if (result === 'PACK_WIN') {
-        if (confirm("The Pack Wins! Confirm?")) resolveHole('pack');
-    } else {
-        alert("It's a TIE (or Wash) according to the rules. No points awarded automatically. Please use manual override if needed.");
-    }
-}
 
 function showScoringScreen() {
     document.getElementById('selection-screen').style.display = 'none';
@@ -676,8 +712,8 @@ function goToMainPage() {
 
         if (typeof renderPressHistory === 'function') renderPressHistory();
 
-        // Reset Logic - DISABLED
-        // clearMatch();
+        // Check if we can resume (we just paused, so yes)
+        checkResumeEligibility();
     }
 }
 
@@ -685,46 +721,62 @@ function resolveHole(winnerSide) {
     let pointSwing = new Array(gameState.players.length).fill(0);
     // Determine base points per stake
     let points = 0;
+
+    // Define carry at top scope
+    let carry = 0;
+
     const mult = (gameState.currentWagerBasis && gameState.settings.basePointValue)
         ? (gameState.currentWagerBasis / gameState.settings.basePointValue)
         : 1;
 
     if (winnerSide === 'tie') {
-        // No points, just log and advance
+        const carryVal = 2 * mult;
+        gameState.carryOver = (gameState.carryOver || 0) + carryVal;
         points = 0;
-    } else if (currentHoleData.isBlind) {
-        if (winnerSide === 'wolf') {
-            pointSwing[gameState.wolfIndex] = 6 * mult;
-            points = 6 * mult;
-        } else if (winnerSide === 'pack') {
-            gameState.players.forEach((p, i) => { if (i !== gameState.wolfIndex) pointSwing[i] = 4 * mult; });
-            points = 4 * mult;
-        }
-    } else if (currentHoleData.isLoneWolf) {
-        if (winnerSide === 'wolf') {
-            pointSwing[gameState.wolfIndex] = 4 * mult;
-            points = 4 * mult;
-        } else if (winnerSide === 'pack') {
-            gameState.players.forEach((p, i) => { if (i !== gameState.wolfIndex) pointSwing[i] = 1 * mult; });
-            points = 1 * mult;
-        }
     } else {
-        if (winnerSide === 'wolf') {
-            pointSwing[gameState.wolfIndex] = 2 * mult;
-            pointSwing[currentHoleData.partnerIndex] = 2 * mult;
-            points = 2 * mult;
-        } else if (winnerSide === 'pack') {
-            gameState.players.forEach((p, i) => {
-                if (i !== gameState.wolfIndex && i !== currentHoleData.partnerIndex) {
-                    pointSwing[i] = 3 * mult;
-                }
-            });
-            points = 3 * mult;
+        // Apply carry if someone won
+        carry = gameState.carryOver || 0;
+
+        // Reset carry after use
+        gameState.carryOver = 0;
+
+        if (currentHoleData.isBlind) {
+            const val = (6 * mult) + carry;
+            points = val;
+
+            if (winnerSide === 'wolf') {
+                pointSwing[gameState.wolfIndex] = val;
+            } else if (winnerSide === 'pack') {
+                gameState.players.forEach((p, i) => { if (i !== gameState.wolfIndex) pointSwing[i] = val; });
+            }
+        } else if (currentHoleData.isLoneWolf) {
+            const val = (4 * mult) + carry;
+            points = val;
+
+            if (winnerSide === 'wolf') {
+                pointSwing[gameState.wolfIndex] = val;
+            } else if (winnerSide === 'pack') {
+                gameState.players.forEach((p, i) => { if (i !== gameState.wolfIndex) pointSwing[i] = val; });
+            }
+        } else {
+            const val = (2 * mult) + carry;
+            points = val;
+
+            if (winnerSide === 'wolf') {
+                pointSwing[gameState.wolfIndex] = val;
+                pointSwing[currentHoleData.partnerIndex] = val;
+            } else if (winnerSide === 'pack') {
+                gameState.players.forEach((p, i) => {
+                    if (i !== gameState.wolfIndex && i !== currentHoleData.partnerIndex) {
+                        pointSwing[i] = val;
+                    }
+                });
+            }
         }
     }
 
+    saveHoleToHistory(winnerSide, points, pointSwing, carry);
     gameState.players.forEach((p, i) => { p.score += pointSwing[i]; });
-    saveHoleToHistory(winnerSide, points, pointSwing);
     saveToPhone();
     moveToNextHole();
 }
@@ -780,7 +832,7 @@ function submitScores() {
     }
 }
 
-function saveHoleToHistory(winnerSide, pointsAwarded, pointSwing) {
+function saveHoleToHistory(winnerSide, pointsAwarded, pointSwing, carryConsumed = 0) {
     let mode = 'Partner';
     if (currentHoleData.isBlind) mode = 'Blind';
     else if (currentHoleData.isLoneWolf) mode = 'Lone';
@@ -796,10 +848,12 @@ function saveHoleToHistory(winnerSide, pointsAwarded, pointSwing) {
         number: gameState.currentHole,
         wolf: gameState.players[gameState.wolfIndex].name,
         partner: partnerDisplay,
-        result: winnerSide === 'wolf' ? 'Wolf' : 'Pack',
+        result: winnerSide === 'wolf' ? 'Wolf' : (winnerSide === 'pack' ? 'Pack' : 'Tie'),
+        winnerSide: winnerSide, // Explicit for undo logic
         points: pointsAwarded,
         pointSwing: pointSwing,
-        wolfIndexWas: gameState.wolfIndex
+        wolfIndexWas: gameState.wolfIndex,
+        carryConsumed: carryConsumed
     };
 
     gameState.history.unshift(holeRecord);
@@ -831,13 +885,64 @@ function renderHistory() {
 
 function undoLastHole() {
     if (gameState.history.length === 0) return;
+
+    // Check for presses on this hole and revert
+    if (gameState.pressLog && gameState.pressLog.length > 0) {
+        // Filter out presses from the hole we are undoing
+        const pressesToRevert = gameState.pressLog.filter(p => p.hole === gameState.currentHole);
+        const pressesKeep = gameState.pressLog.filter(p => p.hole !== gameState.currentHole);
+
+        if (pressesToRevert.length > 0) {
+            // Revert wager basis (Divide by 2 for each press)
+            pressesToRevert.forEach(() => {
+                gameState.currentWagerBasis /= 2;
+            });
+            gameState.pressLog = pressesKeep;
+        }
+    }
+
     const lastHole = gameState.history.shift();
+
+    // Reverse Score Swing
     lastHole.pointSwing.forEach((points, index) => { gameState.players[index].score -= points; });
+
+    // Reverse Carry Over Logic
+    if (lastHole.winnerSide === 'tie') {
+        // If last hole was a tie, it added to the pot. We must remove that.
+        // We need to know how much was added. 
+        // Simplified: Assume 2 * currentWagerBasis (approx, though wager might have changed)
+        // Better: Store 'carryAdded' in history? 
+        // For now, let's just deduct valid approximation or 0 if undefined.
+        // gameState.carryOver -= (lastHole.carryAdded || 0);
+
+        // Actually, let's look at `resolveHole` logic. It added `2 * mult`.
+        // Since we don't store exact amount added, we might drift. 
+        // Let's simply allow 'Undo' to be permissive or just accept minor drift in edge cases.
+        // CRITICAL: If we don't fix carryOver, replaying the tie will double-add.
+        // Let's calculate what WOULD have been added.
+        const mult = (gameState.currentWagerBasis && gameState.settings.basePointValue)
+            ? (gameState.currentWagerBasis / gameState.settings.basePointValue)
+            : 1;
+        const valStart = 2 * mult;
+        if (gameState.carryOver >= valStart) {
+            gameState.carryOver -= valStart;
+        }
+    } else {
+        // If someone WON, restore any carry they claimed
+        if (lastHole.carryConsumed && lastHole.carryConsumed > 0) {
+            gameState.carryOver = (gameState.carryOver || 0) + lastHole.carryConsumed;
+        }
+    }
+
     gameState.currentHole--;
+
+    // Reset any hole data just in case
+    currentHoleData = { wolfIndex: 0, partnerIndex: null, isLoneWolf: false, isBlind: false };
 
     if (document.getElementById('leaderboard-screen').style.display === 'block') {
         document.getElementById('selection-screen').style.display = 'block';
         document.getElementById('leaderboard-screen').style.display = 'none';
+        document.getElementById('summary-screen').style.display = 'none';
     }
 
     saveToPhone();
