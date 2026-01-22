@@ -157,7 +157,6 @@ function updatePlayerRows() {
 
     for (let i = 0; i < groupSize; i++) {
         const isUser = i === 0;
-        // logic: if we have saved data use it, otherwise use defaults for first user
         let savedName = '';
         let savedHcp = 'HCP';
 
@@ -165,25 +164,25 @@ function updatePlayerRows() {
             savedName = currentData[i].name;
             savedHcp = currentData[i].hcp;
         } else if (isUser) {
-            // Defaults for fresh rows if not present
             savedName = 'Sam';
             savedHcp = '10.2';
         }
 
-        // Clean up HCP text to ensure valid class detection
         const hcpText = savedHcp.trim();
         const hcpClass = (hcpText !== 'HCP' && hcpText !== '') ? 'active-hcp' : '';
 
+        // Added IDs: p${i+1}-name and p${i+1}-hcp for the fetch function
         const rowHtml = `
             <div class="player-entry-group">
                 <label class="player-label">Player ${i + 1}${isUser ? ' (You)' : ''}</label>
                 <div class="player-inputs">
-                    <input type="text" class="name-input" placeholder="Name" value="${savedName}">
-                    <div class="hcp-input ${hcpClass}" 
+                    <input type="text" id="p${i + 1}-name" class="name-input" placeholder="Name (e.g. Joe Smith IA)" value="${savedName}">
+                    <div id="p${i + 1}-hcp" class="hcp-input ${hcpClass}" 
                          contenteditable="true" 
                          oninput="handleHcpInput(this)">
                         ${savedHcp}
                     </div>
+                     <button type="button" onclick="window.fetchGhin(${i + 1}, this)" style="padding: 10px; background: var(--neon-green); border: none; border-radius: 8px; color: black; font-weight: bold; cursor: pointer; margin-left:10px;">🔍</button>
                 </div>
             </div>
         `;
@@ -1211,4 +1210,163 @@ function generateShareQR() {
 function togglePrivacy() {
     const isLocked = document.getElementById('privacy-toggle').checked;
     console.log("Scoring Locked:", isLocked);
+}
+
+
+// ----------------------------------------------------
+// GHIN SEARCH LOGIC
+// ----------------------------------------------------
+window.fetchGhin = async function (playerIndex, btnElement) {
+    const inputHcp = document.getElementById(`p${playerIndex}-hcp`);
+    const nameInput = document.getElementById(`p${playerIndex}-name`);
+
+    // HCP div is contenteditable, get innerText
+    const val = inputHcp.innerText.replace('HCP', '').trim();
+    const nameVal = nameInput.value.trim();
+
+    // Determine search mode
+    let url = '';
+
+    // Check if HCP box has a GHIN ID (digits only, length >= 5 generally)
+    if (val && /^\d+$/.test(val) && val.length > 4) {
+        // Numeric -> GHIN ID search
+        url = `/api/handicaps/${val}`;
+    } else if (nameVal) {
+        // Name search logic with State detection
+        const parts = nameVal.trim().split(/\s+/);
+
+        let state = 'IA'; // Default fallback
+        const US_STATES = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'];
+
+        const potentialState = parts[parts.length - 1].toUpperCase();
+        if (US_STATES.includes(potentialState)) {
+            state = potentialState;
+            parts.pop();
+        }
+
+        let firstName = '';
+        let lastName = '';
+
+        if (parts.length > 1) {
+            lastName = parts.pop();
+            firstName = parts.join(' ');
+        } else if (parts.length === 1) {
+            lastName = parts[0];
+        }
+
+        url = `/api/handicaps/search?last_name=${lastName}`;
+        if (firstName) url += `&first_name=${firstName}`;
+        if (state) url += `&state=${state}`;
+
+        window.lastSearchState = state;
+    } else {
+        alert("Please enter a GHIN number in the box OR a Player Name.");
+        return;
+    }
+
+    const originalText = btnElement.innerHTML;
+    btnElement.innerHTML = '⏳';
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Search failed or not found");
+
+        const data = await response.json();
+
+        if (Array.isArray(data)) {
+            if (data.length === 0) {
+                throw new Error("No golfers found with that name in " + (window.lastSearchState || 'default region'));
+            } else if (data.length === 1) {
+                const p = data[0];
+                nameInput.value = p.name;
+                inputHcp.innerText = p.handicap_index;
+                inputHcp.classList.add('active-hcp');
+                inputHcp.setAttribute('title', `GHIN: ${p.ghin}`);
+            } else {
+                showGolferSelectionModal(data, (selected) => {
+                    nameInput.value = selected.name;
+                    inputHcp.innerText = selected.handicap_index;
+                    inputHcp.classList.add('active-hcp');
+                    inputHcp.setAttribute('title', `GHIN: ${selected.ghin}`);
+                });
+            }
+        } else {
+            // Single object
+            if (data.name) nameInput.value = data.name;
+            if (data.handicap_index !== undefined) {
+                inputHcp.innerText = data.handicap_index;
+                inputHcp.classList.add('active-hcp');
+                inputHcp.setAttribute('title', `GHIN: ${data.ghin}`);
+            }
+        }
+
+        btnElement.innerHTML = '✅';
+        setTimeout(() => btnElement.innerHTML = originalText, 2000);
+
+    } catch (e) {
+        console.error(e);
+        if (window.location.protocol === 'file:') {
+            alert("⚠️ Connection Error: Please open http://localhost:3001");
+        } else {
+            alert("Search Error: " + e.message);
+        }
+        btnElement.innerHTML = '❌';
+        setTimeout(() => btnElement.innerHTML = originalText, 2000);
+    }
+};
+
+function showGolferSelectionModal(golfers, callback) {
+    const existing = document.getElementById('golfer-select-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'golfer-select-modal';
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+        display: flex; justify-content: center; align-items: center; z-index: 10000;
+    `;
+
+    const content = document.createElement('div');
+    content.style.cssText = `
+        background: var(--card-bg, #1e2126); border: 1px solid var(--neon-green);
+        padding: 20px; border-radius: 12px; max-width: 400px; width: 90%;
+        max-height: 80vh; overflow-y: auto; text-align: center;
+    `;
+
+    const title = document.createElement('h3');
+    title.textContent = "Select Golfer";
+    title.style.color = "white";
+    content.appendChild(title);
+
+    const list = document.createElement('div');
+    list.style.cssText = "display: flex; flex-direction: column; gap: 10px; margin-top: 15px;";
+
+    golfers.slice(0, 50).forEach(g => {
+        const btn = document.createElement('button');
+        btn.style.cssText = `
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px; color: white; border-radius: 6px; cursor: pointer; text-align: left;
+        `;
+        btn.innerHTML = `
+            <div style="font-weight:bold; color:var(--neon-green)">${g.name}</div>
+            <div style="font-size:0.8rem; color:#aaa;">HCP: ${g.handicap_index} | GHIN: ${g.ghin}</div>
+            <div style="font-size:0.75rem; color:#888;">${g.club || ''} (${g.state})</div>
+        `;
+        btn.onclick = () => {
+            callback(g);
+            modal.remove();
+        };
+        list.appendChild(btn);
+    });
+
+    const cancel = document.createElement('button');
+    cancel.textContent = "Cancel";
+    cancel.style.cssText = "margin-top: 15px; padding: 8px 16px; background: #444; color: white; border: none; border-radius: 4px; cursor: pointer;";
+    cancel.onclick = () => modal.remove();
+
+    content.appendChild(list);
+    content.appendChild(cancel);
+    modal.appendChild(content);
+    document.body.appendChild(modal);
 }
