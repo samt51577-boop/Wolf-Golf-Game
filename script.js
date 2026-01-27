@@ -1231,14 +1231,16 @@ window.fetchGhin = async function (playerIndex, btnElement) {
 
     // Determine search mode
     let url = '';
+    const apiBase = window.API_BASE || '';
 
     // Check if HCP box has a GHIN ID (digits only, length >= 5 generally)
     if (val && /^\d+$/.test(val) && val.length > 4) {
         // Numeric -> GHIN ID search
-        url = `/api/handicaps/${val}`;
+        url = `${apiBase}/api/handicaps/${val}`;
     } else if (nameVal) {
-        // Name search logic with State detection
-        const parts = nameVal.trim().split(/\s+/);
+        // Clean up name: remove common separators like commas or dots
+        const cleanedName = nameVal.replace(/[,.]/g, ' ').trim();
+        const parts = cleanedName.split(/\s+/);
 
         let state = 'IA'; // Default fallback
         const US_STATES = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'];
@@ -1259,11 +1261,12 @@ window.fetchGhin = async function (playerIndex, btnElement) {
             lastName = parts[0];
         }
 
-        url = `/api/handicaps/search?last_name=${lastName}`;
-        if (firstName) url += `&first_name=${firstName}`;
-        if (state) url += `&state=${state}`;
+        url = `${apiBase}/api/handicaps/search?last_name=${encodeURIComponent(lastName)}`;
+        if (firstName) url += `&first_name=${encodeURIComponent(firstName)}`;
+        if (state) url += `&state=${encodeURIComponent(state)}`;
 
         window.lastSearchState = state;
+        console.log(`[GHIN Fetch] Extracted name: "${firstName} ${lastName}", state: "${state}"`);
     } else {
         alert("Please enter a GHIN number in the box OR a Player Name.");
         return;
@@ -1274,9 +1277,21 @@ window.fetchGhin = async function (playerIndex, btnElement) {
 
     try {
         const response = await fetch(url);
-        if (!response.ok) throw new Error("Search failed or not found");
+        let data;
 
-        const data = await response.json();
+        try {
+            data = await response.json();
+        } catch (jsonErr) {
+            if (!response.ok) {
+                throw new Error(`Server returned ${response.status}: ${response.statusText}. The Wolf API might not be configured correctly on this domain.`);
+            }
+            throw new Error("Invalid response from server");
+        }
+
+        if (!response.ok) {
+            const errorMsg = data.details || data.error || `Error ${response.status}: ${response.statusText}`;
+            throw new Error(errorMsg);
+        }
 
         if (Array.isArray(data)) {
             if (data.length === 0) {
@@ -1309,11 +1324,17 @@ window.fetchGhin = async function (playerIndex, btnElement) {
         setTimeout(() => btnElement.innerHTML = originalText, 2000);
 
     } catch (e) {
-        console.error(e);
+        console.error("Fetch Error:", e);
+
+        let message = e.message;
+        if (message === "Failed to fetch") {
+            message = "Could not connect to the search server. Ensure the Node.js backend is running (Port 3001 for Wolf).";
+        }
+
         if (window.location.protocol === 'file:') {
-            alert("⚠️ Connection Error: Please open http://localhost:3001");
+            alert("⚠️ Connection Error: GHIN Search requires the local server.\n\nPlease open http://localhost:3001 in your browser.");
         } else {
-            alert("Search Error: " + e.message);
+            alert("Search Error: " + message);
         }
         btnElement.innerHTML = '❌';
         setTimeout(() => btnElement.innerHTML = originalText, 2000);
