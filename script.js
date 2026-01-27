@@ -1229,9 +1229,19 @@ window.fetchGhin = async function (playerIndex, btnElement) {
     const val = inputHcp.innerText.replace('HCP', '').trim();
     const nameVal = nameInput.value.trim();
 
-    // Determine search mode
+    // Smart API Discovery
+    let apiBase = window.API_BASE || '';
+    if (!apiBase) {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            apiBase = 'http://localhost:3001';
+        } else if (window.location.hostname.includes('samtierney10.com')) {
+            // If we're on the main domain but getting 404s, 
+            // the server might be running on 3001 and not proxied.
+            apiBase = window.location.protocol + '//' + window.location.hostname + ':3001';
+        }
+    }
+
     let url = '';
-    const apiBase = window.API_BASE || '';
 
     // Check if HCP box has a GHIN ID (digits only, length >= 5 generally)
     if (val && /^\d+$/.test(val) && val.length > 4) {
@@ -1266,7 +1276,7 @@ window.fetchGhin = async function (playerIndex, btnElement) {
         if (state) url += `&state=${encodeURIComponent(state)}`;
 
         window.lastSearchState = state;
-        console.log(`[GHIN Fetch] Extracted name: "${firstName} ${lastName}", state: "${state}"`);
+        console.log(`[GHIN Fetch] URL: ${url}`);
     } else {
         alert("Please enter a GHIN number in the box OR a Player Name.");
         return;
@@ -1283,7 +1293,10 @@ window.fetchGhin = async function (playerIndex, btnElement) {
             data = await response.json();
         } catch (jsonErr) {
             if (!response.ok) {
-                throw new Error(`Server returned ${response.status}: ${response.statusText}. The Wolf API might not be configured correctly on this domain.`);
+                if (response.status === 404) {
+                    throw new Error(`The GHIN API was not found (404). If you are using samtierney10.com, please ensure the Node.js server is running and accessible at ${apiBase}`);
+                }
+                throw new Error(`Server returned ${response.status}: ${response.statusText}.`);
             }
             throw new Error("Invalid response from server");
         }
