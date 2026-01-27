@@ -1235,9 +1235,8 @@ window.fetchGhin = async function (playerIndex, btnElement) {
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             apiBase = 'http://localhost:3001';
         } else if (window.location.hostname.includes('samtierney10.com')) {
-            // If we're on the main domain but getting 404s, 
-            // the server might be running on 3001 and not proxied.
-            apiBase = window.location.protocol + '//' + window.location.hostname + ':3001';
+            // Use the live Render backend
+            apiBase = 'https://wolf-golf-game.onrender.com';
         }
     }
 
