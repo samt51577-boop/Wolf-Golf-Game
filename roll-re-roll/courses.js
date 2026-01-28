@@ -1,14 +1,6 @@
 const COURSES_BY_STATE = {
     IA: [
         {
-            id: "willow_creek",
-            name: "Willow Creek",
-            slope: 113,
-            rating: 72.0,
-            par: [4, 5, 4, 3, 5, 4, 4, 3, 4, 4, 4, 3, 4, 4, 4, 3, 5, 4],
-            indexes: [9, 5, 1, 15, 7, 13, 11, 17, 3, 6, 8, 16, 12, 10, 2, 18, 4, 14],
-        },
-        {
             id: "dmgcc_north",
             name: "Des Moines Golf & Country Club (North)",
             slope: 139,
@@ -19,18 +11,18 @@ const COURSES_BY_STATE = {
         {
             id: "dmgcc_south",
             name: "Des Moines Golf & Country Club (South)",
-            slope: 135,
-            rating: 74.9,
+            slope: 140,
+            rating: 75.0,
             par: [4, 5, 4, 4, 3, 5, 4, 3, 4, 4, 4, 4, 5, 4, 3, 5, 3, 4],
-            indexes: [3, 7, 9, 1, 15, 11, 5, 17, 13, 14, 10, 4, 6, 12, 16, 2, 18, 8],
+            indexes: [7, 9, 3, 1, 17, 13, 11, 15, 5, 8, 10, 4, 18, 2, 12, 14, 16, 6],
         },
         {
             id: "glen_oaks",
             name: "Glen Oaks Country Club",
-            slope: 144,
+            slope: 145,
             rating: 74.9,
-            par: [4, 4, 4, 3, 4, 5, 4, 3, 5, 4, 4, 3, 4, 4, 4, 3, 5, 4],
-            indexes: [5, 13, 1, 17, 7, 11, 9, 15, 3, 6, 14, 4, 18, 8, 12, 10, 16, 2],
+            par: [4, 3, 4, 4, 3, 4, 4, 4, 5, 4, 5, 4, 4, 3, 5, 3, 4, 4],
+            indexes: [12, 10, 4, 18, 8, 2, 6, 14, 16, 3, 15, 11, 5, 9, 13, 17, 1, 7],
         },
         {
             id: "harvester",
