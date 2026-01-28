@@ -1,7 +1,68 @@
-// courses.js
-// This file is populated with notable courses for each state.
-
 const COURSES_BY_STATE = {
-    // Empty initial state as requested.
-    // Structure: 'STATE_CODE': [ { id: '...', name: '...', slope: 113, rating: 72.0, indexes: [...] } ]
+    IA: [
+        {
+            id: "willow_creek",
+            name: "Willow Creek",
+            slope: 113,
+            rating: 72.0,
+            par: [4, 5, 4, 3, 5, 4, 4, 3, 4, 4, 4, 3, 4, 4, 4, 3, 5, 4],
+            indexes: [9, 5, 1, 15, 7, 13, 11, 17, 3, 6, 8, 16, 12, 10, 2, 18, 4, 14],
+        },
+        {
+            id: "dmgcc_north",
+            name: "Des Moines Golf & Country Club (North)",
+            slope: 139,
+            rating: 74.9,
+            par: [4, 5, 3, 4, 3, 4, 4, 4, 5, 4, 4, 3, 5, 4, 4, 4, 3, 5],
+            indexes: [5, 9, 13, 7, 15, 1, 3, 11, 17, 18, 6, 16, 10, 2, 8, 14, 12, 4],
+        },
+        {
+            id: "dmgcc_south",
+            name: "Des Moines Golf & Country Club (South)",
+            slope: 135,
+            rating: 74.9,
+            par: [4, 5, 4, 4, 3, 5, 4, 3, 4, 4, 4, 4, 5, 4, 3, 5, 3, 4],
+            indexes: [3, 7, 9, 1, 15, 11, 5, 17, 13, 14, 10, 4, 6, 12, 16, 2, 18, 8],
+        },
+        {
+            id: "glen_oaks",
+            name: "Glen Oaks Country Club",
+            slope: 144,
+            rating: 74.9,
+            par: [4, 4, 4, 3, 4, 5, 4, 3, 5, 4, 4, 3, 4, 4, 4, 3, 5, 4],
+            indexes: [5, 13, 1, 17, 7, 11, 9, 15, 3, 6, 14, 4, 18, 8, 12, 10, 16, 2],
+        },
+        {
+            id: "harvester",
+            name: "The Harvester Golf Club",
+            slope: 140,
+            rating: 76.0,
+            par: [4, 4, 3, 5, 4, 5, 4, 3, 4, 4, 4, 4, 4, 3, 5, 4, 3, 5],
+            indexes: [16, 14, 8, 4, 18, 10, 6, 12, 2, 7, 17, 11, 15, 9, 1, 3, 13, 5],
+        },
+        {
+            id: "waveland",
+            name: "Waveland Golf Course",
+            slope: 124,
+            rating: 71.2,
+            par: [4, 3, 5, 4, 4, 4, 5, 3, 4, 3, 4, 5, 3, 4, 5, 4, 4, 4],
+            indexes: [9, 17, 1, 7, 13, 15, 11, 5, 3, 6, 10, 4, 18, 14, 12, 2, 8, 16],
+        },
+        {
+            id: "echo_valley",
+            name: "Echo Valley (Vale/Ridge)",
+            slope: 134,
+            rating: 74.0,
+            par: [4, 5, 3, 4, 4, 5, 4, 3, 4, 4, 4, 3, 5, 4, 3, 4, 4, 5],
+            indexes: [11, 7, 17, 15, 3, 9, 1, 13, 5, 4, 12, 18, 2, 6, 10, 16, 8, 14],
+        },
+        {
+            id: "talons",
+            name: "Talons of Tuscany",
+            slope: 137,
+            rating: 71.6,
+            par: [5, 5, 3, 4, 5, 3, 4, 3, 4, 4, 5, 4, 3, 4, 4, 3, 5, 4],
+            indexes: [17, 7, 11, 1, 3, 9, 13, 15, 5, 4, 8, 2, 16, 14, 18, 12, 10, 6],
+        },
+    ],
 };
