@@ -3,8 +3,8 @@ const COURSES_BY_STATE = {
         {
             id: "dmgcc_north",
             name: "Des Moines Golf & Country Club (North)",
-            slope: 139,
-            rating: 74.9,
+            slope: 136,
+            rating: 75.2,
             par: [4, 5, 3, 4, 3, 4, 4, 4, 5, 4, 4, 3, 5, 4, 4, 4, 3, 5],
             indexes: [5, 9, 13, 7, 15, 1, 3, 11, 17, 18, 6, 16, 10, 2, 8, 14, 12, 4],
         },

@@ -31,19 +31,19 @@ const courseLibrary = {
         par: [4, 5, 4, 3, 5, 4, 4, 3, 4, 4, 4, 3, 4, 4, 4, 3, 5, 4]
     },
     "DMGCC North": {
-        name: "DMGCC North",
+        name: "Des Moines Golf & Country Club (North)",
         par: [4, 5, 3, 4, 3, 4, 4, 4, 5, 4, 4, 3, 5, 4, 4, 4, 3, 5],
         si: [5, 9, 13, 7, 15, 1, 3, 11, 17, 18, 6, 16, 10, 2, 8, 14, 12, 4]
     },
     "DMGCC South": {
-        name: "DMGCC South",
+        name: "Des Moines Golf & Country Club (South)",
         par: [4, 5, 4, 4, 3, 5, 4, 3, 4, 4, 4, 4, 5, 4, 3, 5, 3, 4],
-        si: [3, 7, 9, 1, 15, 11, 5, 17, 13, 14, 10, 4, 6, 12, 16, 2, 18, 8]
+        si: [7, 9, 3, 1, 17, 13, 11, 15, 5, 8, 10, 4, 18, 2, 12, 14, 16, 6]
     },
     "Glen Oaks": {
-        name: "Glen Oaks",
-        par: [4, 4, 4, 3, 4, 5, 4, 3, 5, 4, 4, 3, 4, 4, 4, 3, 5, 4],
-        si: [5, 13, 1, 17, 7, 11, 9, 15, 3, 6, 14, 4, 18, 8, 12, 10, 16, 2]
+        name: "Glen Oaks Country Club",
+        par: [4, 3, 4, 4, 3, 4, 4, 4, 5, 4, 5, 4, 4, 3, 5, 3, 4, 4],
+        si: [12, 10, 4, 18, 8, 2, 6, 14, 16, 3, 15, 11, 5, 9, 13, 17, 1, 7]
     },
     "The Harvester": {
         name: "The Harvester",
