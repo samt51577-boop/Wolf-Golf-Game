@@ -1,12 +1,33 @@
 const COURSES_BY_STATE = {
     IA: [
         {
+            id: "willow_creek",
+            name: "Willow Creek",
+            slope: 113,
+            rating: 72.0,
+            par: [4, 5, 4, 3, 5, 4, 4, 3, 4, 4, 4, 3, 4, 4, 4, 3, 5, 4],
+            indexes: [9, 5, 1, 15, 7, 13, 11, 17, 3, 6, 8, 16, 12, 10, 2, 18, 4, 14],
+        },
+        {
             id: "dmgcc_north",
             name: "Des Moines Golf & Country Club (North)",
             slope: 136,
             rating: 75.2,
             par: [4, 5, 3, 4, 3, 4, 4, 4, 5, 4, 4, 3, 5, 4, 4, 4, 3, 5],
             indexes: [5, 9, 13, 7, 15, 1, 3, 11, 17, 18, 6, 16, 10, 2, 8, 14, 12, 4],
+            womensIndexes: [3, 11, 15, 7, 17, 1, 5, 13, 9, 14, 6, 16, 8, 2, 10, 4, 18, 12],
+            tees: [
+                { name: "Black", gender: "M", rating: 75.2, slope: 136 },
+                { name: "Green/Black", gender: "M", rating: 73.8, slope: 133 },
+                { name: "Green", gender: "M", rating: 72.5, slope: 130 },
+                { name: "Blue/Green", gender: "M", rating: 71.1, slope: 127 },
+                { name: "Blue", gender: "M", rating: 69.0, slope: 124 },
+                { name: "Bronze", gender: "M", rating: 65.0, slope: 108 },
+                { name: "Black", gender: "F", rating: 82.1, slope: 145 },
+                { name: "Green", gender: "F", rating: 79.0, slope: 138 },
+                { name: "Blue", gender: "F", rating: 75.1, slope: 130 },
+                { name: "Bronze", gender: "F", rating: 69.4, slope: 119 },
+            ]
         },
         {
             id: "dmgcc_south",
@@ -15,6 +36,19 @@ const COURSES_BY_STATE = {
             rating: 75.0,
             par: [4, 5, 4, 4, 3, 5, 4, 3, 4, 4, 4, 4, 5, 4, 3, 5, 3, 4],
             indexes: [7, 9, 3, 1, 17, 13, 11, 15, 5, 8, 10, 4, 18, 2, 12, 14, 16, 6],
+            womensIndexes: [13, 7, 3, 9, 17, 1, 15, 11, 5, 10, 8, 4, 12, 2, 16, 14, 18, 6],
+            tees: [
+                { name: "Black", gender: "M", rating: 75.0, slope: 140 },
+                { name: "Green/Black", gender: "M", rating: 73.1, slope: 136 },
+                { name: "Green", gender: "M", rating: 72.3, slope: 135 },
+                { name: "Blue/Green", gender: "M", rating: 71.3, slope: 130 },
+                { name: "Blue", gender: "M", rating: 68.6, slope: 124 },
+                { name: "Bronze", gender: "M", rating: 64.4, slope: 106 },
+                { name: "Black", gender: "F", rating: 82.4, slope: 146 },
+                { name: "Green", gender: "F", rating: 79.1, slope: 139 },
+                { name: "Blue", gender: "F", rating: 74.9, slope: 131 },
+                { name: "Bronze", gender: "F", rating: 69.3, slope: 118 },
+            ]
         },
         {
             id: "glen_oaks",
@@ -23,6 +57,20 @@ const COURSES_BY_STATE = {
             rating: 74.9,
             par: [4, 3, 4, 4, 3, 4, 4, 4, 5, 4, 5, 4, 4, 3, 5, 3, 4, 4],
             indexes: [12, 10, 4, 18, 8, 2, 6, 14, 16, 3, 15, 11, 5, 9, 13, 17, 1, 7],
+            womensIndexes: [10, 12, 4, 18, 8, 2, 6, 16, 14, 7, 11, 1, 13, 17, 5, 15, 9, 3],
+            tees: [
+                { name: "Black", gender: "M", rating: 74.9, slope: 145 },
+                { name: "Green", gender: "M", rating: 72.8, slope: 142 },
+                { name: "Member", gender: "M", rating: 71.3, slope: 139 },
+                { name: "White", gender: "M", rating: 70.6, slope: 139 },
+                { name: "Blue", gender: "M", rating: 67.7, slope: 120 },
+                { name: "Gold", gender: "M", rating: 64.7, slope: 114 },
+                { name: "Black", gender: "F", rating: 81.1, slope: 151 },
+                { name: "Green", gender: "F", rating: 78.6, slope: 146 },
+                { name: "White", gender: "F", rating: 75.9, slope: 140 },
+                { name: "Blue", gender: "F", rating: 72.5, slope: 133 },
+                { name: "Gold", gender: "F", rating: 69.6, slope: 121 },
+            ]
         },
         {
             id: "harvester",

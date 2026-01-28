@@ -1171,10 +1171,14 @@ class RollReRollGame {
 
     // Get Course Data
     let courseData = this.state.course || { slope: 113, rating: 72 };
-    // Ensure slope/rating exists (if course has tees but no root slope)
-    if (!courseData.slope && courseData.tees && courseData.tees.length > 0) {
-      courseData.slope = courseData.tees[0].slope;
-      courseData.rating = courseData.tees[0].rating;
+    const teeSelect = document.getElementById("courseTee");
+    const teeIndex = teeSelect ? teeSelect.value : "default";
+    let selectedTee = null;
+    if (teeIndex !== "default" && courseData.tees) {
+      selectedTee = courseData.tees[parseInt(teeIndex)];
+      courseData.slope = selectedTee.slope;
+      courseData.rating = selectedTee.rating;
+      courseData.gender = selectedTee.gender;
     }
     if (!courseData.slope) courseData.slope = 113;
     if (!courseData.rating) courseData.rating = 72;
@@ -1293,15 +1297,21 @@ class RollReRollGame {
   }
 
   getPops(hcp, holeIndex) {
-    // Simple logic:
-    // If Hcp 18, get 1 pop every hole.
-    // If Hcp 10, get 1 pop on hardest 10 holes (Index 1-10).
-    // If Hcp > 18 (e.g. 20), get 1 pop all holes + 1 extra on hardest 2.
+    if (!this.state.course) return 0;
 
+    // Determine which index array to use
+    let indexArray = this.state.course.indexes;
+    if (this.state.course.gender === 'F' && this.state.course.womensIndexes) {
+      indexArray = this.state.course.womensIndexes;
+    }
+
+    if (!indexArray || indexArray.length < 18) return 0;
+
+    const holeSI = indexArray[holeIndex - 1]; // holeIndex is 1-based
     let pops = Math.floor(hcp / 18);
     const remainder = hcp % 18;
 
-    if (remainder >= holeIndex) {
+    if (holeSI <= remainder) {
       pops += 1;
     }
     return pops;
