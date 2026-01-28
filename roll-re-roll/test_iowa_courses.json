@@ -1,0 +1,20 @@
+{
+  "state": "Iowa",
+  "total_courses": 2,
+  "courses": [
+    {
+      "name": "Waveland Municipal Golf Course",
+      "city": "Des Moines",
+      "type": "Public",
+      "holes": 18,
+      "coordinates": {"lat": 41.594, "lng": -93.684}
+    },
+    {
+      "name": "Davenport Country Club",
+      "city": "Pleasant Valley",
+      "type": "Private",
+      "holes": 18,
+      "coordinates": {"lat": 41.558, "lng": -90.435}
+    }
+  ]
+}

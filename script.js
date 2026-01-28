@@ -1233,10 +1233,10 @@ window.fetchGhin = async function (playerIndex, btnElement) {
     let apiBase = window.API_BASE || '';
     if (!apiBase) {
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            apiBase = 'http://localhost:3001';
+            apiBase = 'http://localhost:3001/';
         } else if (window.location.hostname.includes('samtierney10.com')) {
             // Use the live Render backend
-            apiBase = 'https://wolf-golf-game.onrender.com';
+            apiBase = 'https://wolf-golf-game.onrender.com/';
         }
     }
 
@@ -1245,7 +1245,7 @@ window.fetchGhin = async function (playerIndex, btnElement) {
     // Check if HCP box has a GHIN ID (digits only, length >= 5 generally)
     if (val && /^\d+$/.test(val) && val.length > 4) {
         // Numeric -> GHIN ID search
-        url = `${apiBase}/api/handicaps/${val}`;
+        url = `${apiBase}api/handicaps/${val}`;
     } else if (nameVal) {
         // Clean up name: remove common separators like commas or dots
         const cleanedName = nameVal.replace(/[,.]/g, ' ').trim();
@@ -1270,7 +1270,7 @@ window.fetchGhin = async function (playerIndex, btnElement) {
             lastName = parts[0];
         }
 
-        url = `${apiBase}/api/handicaps/search?last_name=${encodeURIComponent(lastName)}`;
+        url = `${apiBase}api/handicaps/search?last_name=${encodeURIComponent(lastName)}`;
         if (firstName) url += `&first_name=${encodeURIComponent(firstName)}`;
         if (state) url += `&state=${encodeURIComponent(state)}`;
 
