@@ -996,9 +996,10 @@ class RollReRollGame {
     this.newCourseInputs.name.value = course.name;
 
     // Populate Pars
-    if (course.pars) {
+    const coursePars = course.par || course.pars;
+    if (coursePars) {
       this.newCourseInputs.pars.forEach((input, i) => {
-        if (course.pars[i] !== undefined) input.value = course.pars[i];
+        if (coursePars[i] !== undefined) input.value = coursePars[i];
       });
     }
 
@@ -1717,7 +1718,7 @@ class RollReRollGame {
       tableHTML += "<th>IN</th><th>TOT</th></tr></thead><tbody>";
 
       // Par Row
-      const pars = this.state.course.pars || Array(18).fill(4);
+      const pars = this.state.course.par || this.state.course.pars || Array(18).fill(4);
       const indexes = this.state.course.indexes || Array(18).fill("-");
 
       let parOut = 0;
